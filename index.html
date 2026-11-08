@@ -526,9 +526,7 @@ const g=(id,t)=>{const [d,bx,by]=SH[t];const [nc,nd]=NEON[id%NEON.length];return
 </svg>`};
 // [type, page %, side x (vw, may be off-edge), size px, rotation, parallax speed]
 const L=[['jug',7,-3,230,-18,.25],['crimp',18,84,190,24,.4],['pinch',30,-4,150,-30,.18],['sloper',41,82,260,12,.32],
- ['volume',53,-6,240,8,.22],['pocket',64,85,180,-14,.38],['crimp',75,-3,170,160,.28],['jug',86,83,210,200,.2],
- ['pocket',12,40,120,30,0],['sloper',24,62,150,-8,0],['jug',36,30,140,40,0],['crimp',47,55,130,-20,0],['volume',58,35,160,15,0],
- ['pinch',69,60,120,70,0],['jug',80,45,150,-30,0],['pocket',92,30,130,12,0],['crimp',95,70,140,-40,0]];
+ ['volume',53,-6,240,8,.22],['pocket',64,85,180,-14,.38],['crimp',75,-3,170,160,.28],['jug',86,83,210,200,.2]];
 const box=document.getElementById('holds');
 // extra holds centred in the black gaps between sections: [section selector, x vw, size, rotation, type]
 const M=[['#features',58,130,-22,'pocket'],['#intro',62,150,18,'crimp'],['#haller',48,140,-35,'pinch'],['#community',60,170,10,'sloper'],['.final',40,130,-12,'jug']];
@@ -536,7 +534,10 @@ const mid=M.map(m=>document.querySelector(m[0]));
 M.forEach(m=>L.push([m[4],0,m[1],m[2],m[3],0]));
 box.innerHTML=L.map((h,i)=>`<div class="hold" data-i="${i}" style="--s:${h[3]}px;--c:${NEON[(i+1)%NEON.length][0]};left:${h[2]}vw">${g(i+1,h[0])}</div>`).join('');
 const els=[...box.children];
-function place(){const H=document.documentElement.scrollHeight;box.style.height=H+'px';els.forEach((el,i)=>{const k=i-(L.length-M.length);el.style.top=(k>=0&&mid[k]?mid[k].offsetTop-(mid[k].id==='features'?40:0)-L[i][3]*.45:L[i][1]/100*H)+'px';el.style.transform=`rotate(${L[i][4]}deg)`})}
+function place(){const H=document.documentElement.scrollHeight;box.style.height=H+'px';els.forEach((el,i)=>{const k=i-(L.length-M.length);el.style.top=(k>=0&&mid[k]?mid[k].offsetTop-(mid[k].id==='features'?40:0)-L[i][3]*.45:L[i][1]/100*H)+'px';el.style.transform=`rotate(${L[i][4]}deg)`});hide()}
+// only keep holds that sit fully on black: drop any that touch a photo, card, video or text
+function hide(){const sy=scrollY,R=[...document.querySelectorAll('img,video,canvas.wave,.pc,.hall,.film,.u,.offer,.glass,h1,h2,h3,p,.btn,.feat,.rev,.counters,.strip')].map(e=>e.getBoundingClientRect()).filter(r=>r.width).map(r=>({l:r.left,r:r.right,t:r.top+sy,b:r.bottom+sy}));
+ els.forEach(el=>{el.style.display='';const b=el.getBoundingClientRect(),h={l:b.left-30,r:b.right+30,t:b.top+sy-30,b:b.bottom+sy+30};el.style.display=R.some(r=>r.l<h.r&&r.r>h.l&&r.t<h.b&&r.b>h.t)?'none':''})}
 place();addEventListener('resize',place);addEventListener('load',place);
 })();
 </script>
