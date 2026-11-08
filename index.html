@@ -221,7 +221,7 @@ h2 em{color:#9c9c9c}
 /* floating holds */
 #holds{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:3;overflow:hidden}
 section,footer{z-index:1}
-.hold{position:absolute;width:var(--s);pointer-events:auto;cursor:pointer;transform:perspective(600px) rotate(var(--r)) rotateY(var(--tx,0deg)) rotateX(var(--ty,0deg));transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 22px var(--c)) drop-shadow(0 0 60px color-mix(in srgb,var(--c) 55%,transparent))}
+.hold{position:absolute;width:var(--s);pointer-events:auto;cursor:pointer;transform:perspective(600px) rotate(var(--r)) rotateY(var(--tx,0deg)) rotateX(var(--ty,0deg));transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .6s ease;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 22px var(--c)) drop-shadow(0 0 60px color-mix(in srgb,var(--c) 55%,transparent))}
 .hold svg{width:100%;height:auto;display:block;transition:transform 1s var(--ease)}
 .hold:hover svg{transform:rotate(-8deg) scale(1.06)}
 .hold:hover{transform:perspective(600px) rotate(var(--r)) rotateY(var(--tx,0deg)) rotateX(var(--ty,0deg)) scale(1.12);filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px var(--c)) drop-shadow(0 0 90px var(--c)) brightness(1.2)}
@@ -537,12 +537,18 @@ function place(){const H=document.documentElement.scrollHeight,W=document.docume
  const step=mob?70:90,gap=mob?260:380;
  for(let y=innerHeight;y<H-200;y+=step)for(let k=0;k<6;k++){const sz=mob?70+(n*37%40):110+(n*53%90),x=sz/2+((n*0.618+k*0.37)%1)*(W-sz);n++;const z=sz/2+20;
   if(free(x,y,z)&&!out.some(o=>Math.hypot(o.x-x,o.y-y)<gap)){out.push({x,y,sz});break}}
- box.innerHTML=out.map((o,i)=>`<div class="hold" style="--s:${o.sz}px;--c:${NEON[(i+1)%NEON.length][0]};left:${o.x-o.sz/2}px;top:${o.y-o.sz/2}px;--r:${(i*67%120)-60}deg">${g(i+1,T[i%T.length])}</div>`).join('');
+ box.innerHTML=out.map((o,i)=>`<div class="hold" data-c="${(i+1)%NEON.length}" data-t="${i%T.length}" style="--s:${o.sz}px;--c:${NEON[(i+1)%NEON.length][0]};left:${o.x-o.sz/2}px;top:${o.y-o.sz/2}px;--r:${(i*67%120)-60}deg">${g(i+1,T[i%T.length])}</div>`).join('');
  els=[...box.children]}
 // interactive: holds tilt toward the cursor, glow on hover, and spin + burst when clicked/tapped
 box.addEventListener('pointermove',e=>{const h=e.target.closest('.hold');if(!h)return;const b=h.getBoundingClientRect();h.style.setProperty('--tx',((e.clientX-b.left)/b.width-.5)*24+'deg');h.style.setProperty('--ty',((e.clientY-b.top)/b.height-.5)*-24+'deg')});
 box.addEventListener('pointerout',e=>{const h=e.target.closest('.hold');if(h){h.style.setProperty('--tx','0deg');h.style.setProperty('--ty','0deg')}});
-box.addEventListener('click',e=>{const h=e.target.closest('.hold');if(!h)return;h.classList.remove('pop');void h.offsetWidth;h.classList.add('pop');
+let uid=900;box.addEventListener('click',e=>{const h=e.target.closest('.hold');if(!h||h.busy)return;h.busy=1;
+ // smooth morph: old shape spins + shrinks + blurs out, new shape and colour spin back in
+ const sv=h.querySelector('svg'),ci=((+h.dataset.c||0)+1+Math.floor(Math.random()*(NEON.length-1)))%NEON.length,ti=((+h.dataset.t||0)+1+Math.floor(Math.random()*(T.length-1)))%T.length;
+ h.dataset.c=ci;h.dataset.t=ti;h.style.setProperty('--c',NEON[ci][0]);
+ sv.animate([{transform:'none',filter:'blur(0)',opacity:1},{transform:'rotate(160deg) scale(.35)',filter:'blur(8px)',opacity:.2}],{duration:280,easing:'cubic-bezier(.5,0,.75,0)'}).onfinish=()=>{
+  h.innerHTML=g(++uid,T[ti]).replace(/^<svg/,'<svg').replace(NEON[uid%NEON.length][0],NEON[ci][0]).replace(NEON[uid%NEON.length][1],NEON[ci][1]);
+  h.firstElementChild.animate([{transform:'rotate(-160deg) scale(.35)',filter:'blur(8px)',opacity:.2},{transform:'rotate(8deg) scale(1.12)',offset:.7},{transform:'none',filter:'blur(0)',opacity:1}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish=()=>h.busy=0};
  const b=h.getBoundingClientRect(),c=getComputedStyle(h).getPropertyValue('--c');for(let i=0;i<14;i++){const d=document.createElement('i');d.className='spark';d.style.cssText=`left:${b.left+b.width/2+scrollX}px;top:${b.top+b.height/2+scrollY}px;background:${c};box-shadow:0 0 10px ${c};--dx:${Math.cos(i/14*6.283)*(60+Math.random()*50)}px;--dy:${Math.sin(i/14*6.283)*(60+Math.random()*50)}px`;document.body.appendChild(d);setTimeout(()=>d.remove(),800)}});
 place();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(place,200)});addEventListener('load',place);setTimeout(place,1500);
 })();
