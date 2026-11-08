@@ -468,7 +468,54 @@ function wave(cv,o){
     // cheap bloom: downsample + upscale back on top
     G.width=W/6|0;G.height=H/6|0;g.drawImage(cv,0,0,G.width,G.height);ctx.globalAlpha=.55;ctx.imageSmoothingQuality='high';ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(G,0,0,cv.width,cv.height);ctx.restore();ctx.globalAlpha=1}
   requestAnimationFrame(frame)}
-wave(document.getElementById('wave'),{y:.3,ph:0,amp:.12});
+// hero: a tiny climber made of dots that climbs toward the cursor, moving one limb at a time between dotted holds
+function climb(cv){
+ const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W,H,S,holds=[],mx=null,my=null,vis=true,c;
+ const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(7);
+ function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);S=W<700?.75:1;
+  holds=[];const gap=17*S;let tries=0;while(holds.length<(W<700?520:1000)&&tries++<6000){const h={x:20+rnd()*(W-40),y:70+rnd()*(H-110),r:(3+rnd()*4)*S,d:[]};
+   if(holds.every(o=>Math.hypot(o.x-h.x,o.y-h.y)>gap)){const n=Math.round(h.r*2.4);for(let i=0;i<n;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*h.r;h.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(h)}}
+  const taken=[],near=(px,py)=>holds.reduce((b,h,i)=>taken.includes(i)?b:taken.includes(b)||Math.hypot(h.x-px,h.y-py)<Math.hypot(holds[b].x-px,holds[b].y-py)?i:b,0);
+  const bx=W*.18,by=H*.78,o=[[-14,-26],[14,-26],[-12,26],[12,26]];
+  c={bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
+ init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
+ addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();if(e.clientY<r.bottom){mx=e.clientX-r.left;my=e.clientY-r.top}},{passive:true});
+ new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
+ const REACH=()=>66*S, OFF=[[-14,-24],[14,-24],[-11,24],[11,24]];
+ function step(t){
+  const gx=mx??W*(.5+.35*Math.sin(t/5000)),gy=my??H*(.45+.3*Math.cos(t/4100));
+  if(c.l.some(l=>l.t<1))return;if(t<c.wait)return;
+  const dx=gx-c.bx,dy=gy-c.by,d=Math.hypot(dx,dy);if(d<14*S)return;
+  // climb like a person: limbs take turns (right hand, left foot, left hand, right foot); each one reaches for the free
+  // hold nearest its ideal spot ahead of the body, and must actually gain ground toward the goal
+  const ux=dx/d,uy=dy/d,adv=Math.min(d,34*S),Bx=c.bx+ux*adv,By=c.by+uy*adv,SEQ=[1,2,0,3];c.n=c.n||0;
+  for(let j=0;j<4;j++){const k=SEQ[(c.n+j)%4],l=c.l[k],ix=Bx+OFF[k][0]*S,iy=By+OFF[k][1]*S;let bi=-1,bd=1e9;
+   holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH())return;if((h.x-l.x)*ux+(h.y-l.y)*uy<8*S)return;
+    const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
+   if(bi>=0){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%4;c.wait=t+40;return}}
+  c.wait=t+200}
+ const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
+ const limb=(sx,sy,ex,ey,bend)=>{const mxp=(sx+ex)/2,myp=(sy+ey)/2,L=Math.hypot(ex-sx,ey-sy),k=Math.max(0,(40*S-L))*.45*bend,nx=-(ey-sy)/(L||1),ny=(ex-sx)/(L||1);
+  const jx=mxp+nx*k,jy=myp+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
+ let last=0;function frame(t){requestAnimationFrame(frame);if(!vis)return;const dt=Math.min(50,t-last);last=t;
+  step(t);
+  c.l.forEach(l=>{const h=holds[l.h];if(l.t<1){l.t=Math.min(1,l.t+dt/220);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*8*S}else{l.x=h.x;l.y=h.y}});
+  // body hangs between the four contact points, slightly low
+  const cx=c.l.reduce((s,l)=>s+l.x,0)/4,cy=c.l.reduce((s,l)=>s+l.y,0)/4+3*S;c.bx+=(cx-c.bx)*.12;c.by+=(cy-c.by)*.12;
+  x.clearRect(0,0,W,H);
+  // holds as dot clusters, brighter when the cursor is near
+  holds.forEach((h,i)=>{const used=c.l.some(l=>l.h===i),pn=mx==null?0:Math.max(0,1-Math.hypot(h.x-mx,h.y-my)/160);x.fillStyle=used?'rgba(255,255,255,.95)':`rgba(255,255,255,${.22+pn*.5})`;
+   h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
+  // climber
+  x.fillStyle='#fff';const hip={x:c.bx,y:c.by+9*S},sh={x:c.bx,y:c.by-9*S};
+  dots(sh.x,sh.y,hip.x,hip.y,9);
+  for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
+  limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,c.l[1].x,c.l[1].y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
+  // soft glow on hands/feet
+  c.l.forEach(l=>{x.fillStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(l.x,l.y,6*S,0,6.283);x.fill()})}
+ requestAnimationFrame(frame)}
+climb(document.getElementById('wave'));
+
 wave(document.getElementById('wave2'),{y:.5,ph:2.1,amp:.1,seed:40,speed:.8});
 
 // card dot-glow follows cursor
