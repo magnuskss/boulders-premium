@@ -605,12 +605,12 @@ function drawer(cv){
   // same physics as the hero climber: limbs take turns, each reaching for a free hold that gains ground toward the goal
   const stepTo=ks=>{if(moving||t<(c.wait||0)||gd<6*S)return;const ux=(gx-c.bx)/gd,uy=(gy-c.by)/gd,adv=Math.min(gd,30*S),Bx=c.bx+ux*adv,By=c.by+uy*adv,REACH=58*S;c.n=c.n||0;
    for(let j=0;j<ks.length;j++){const k=ks[(c.n+j)%ks.length],l=c.l[k],ix=Bx+OFF[k][0]*S*dir,iy=By+OFF[k][1]*S,cur=Math.hypot(l.x-ix,l.y-iy);let bi=-1,bd=1e9;
-    holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH)return;const q=Math.hypot(h.x-ix,h.y-iy);if(q>cur-5*S)return;if(q<bd){bd=q;bi=i}});
-    if(bi>=0){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%ks.length;c.wait=t+30;c.stk=0;return}}
+    holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i)||(i===l.prev&&t<l.pt))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH)return;const q=Math.hypot(h.x-ix,h.y-iy);if(q>cur-5*S)return;if(q<bd){bd=q;bi=i}});
+    if(bi>=0){l.prev=l.h;l.pt=t+2500;l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%ks.length;c.wait=t+30;c.stk=0;return}}
    // nothing gains ground: move the most out-of-place limb to the free hold closest to its ideal spot (no flying, no freezing)
    if((c.stk||0)>2){let w=-1,wd=0;ks.forEach(k=>{const l=c.l[k],e=Math.hypot(l.x-(Bx+OFF[k][0]*S*dir),l.y-(By+OFF[k][1]*S));if(e>wd){wd=e;w=k}});
-    if(w>=0){const l=c.l[w],ix=Bx+OFF[w][0]*S*dir,iy=By+OFF[w][1]*S;let bi=-1,bd=1e9;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-c.bx,h.y-c.by)>REACH)return;const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
-     if(bi>=0&&bi!==l.h){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.wait=t+60;c.stk=0;return}}}
+    if(w>=0){const l=c.l[w],ix=Bx+OFF[w][0]*S*dir,iy=By+OFF[w][1]*S;let bi=-1,bd=1e9;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i)||(i===l.prev&&t<l.pt))return;if(Math.hypot(h.x-c.bx,h.y-c.by)>REACH)return;const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
+     if(bi>=0&&bi!==l.h&&bd<wd-6*S){l.prev=l.h;l.pt=t+2500;l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.wait=t+60;c.stk=0;return}}}
    c.wait=t+90;c.stk=(c.stk||0)+1};
   if(c.mode==='draw'){
    const sx=c.bx,sy=c.by-9*S,far=Math.hypot(c.px-sx,c.py-sy)>46*S&&(c.stk||0)<5;
@@ -625,7 +625,7 @@ function drawer(cv){
    if(Math.abs(gx-c.bx)>12*S)c.dir=gx<c.bx?-1:1;
    if(L1.h<0&&!moving){L1.fx=L1.x;L1.fy=L1.y;let bi=-1,bd=1e9;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-L1.x,h.y-L1.y);if(q<bd){bd=q;bi=i}});L1.h=bi;L1.t=0}
    stepTo([1,2,0,3]);
-   if(gd<10*S&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1}
+   if((gd<10*S||((c.stk||0)>12&&gd<34*S))&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1}
    c.px=L1.x;c.py=L1.y}
   const pi=at(c.s),P1=path[pi],pen={x:c.px,y:c.py},drawing=c.mode==='draw'&&Math.hypot(c.px-T.x,c.py-T.y)<1.5*S;
   c.l.forEach((l,k)=>{if(k===1&&c.mode==='draw')return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.22);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*8*S}else{l.x=h.x;l.y=h.y}});
