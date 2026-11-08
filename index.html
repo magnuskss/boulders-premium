@@ -52,7 +52,7 @@ header.top>*{pointer-events:auto}
 .btn.ghost:hover{background:rgba(255,255,255,.06);box-shadow:none}
 
 /* hero — dot wave */
-.hero{position:relative;height:100vh;min-height:760px;overflow:hidden;background:#000;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:0 4vw!important}
+.hero{position:relative;height:100vh;min-height:760px;overflow:hidden;background:transparent;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:0 4vw!important}
 canvas.wave{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
   background:radial-gradient(120% 80% at 50% 30%,transparent 40%,rgba(0,0,0,.7) 100%),linear-gradient(180deg,transparent 45%,rgba(0,0,0,.85) 82%,var(--bg) 100%)}
@@ -267,6 +267,8 @@ footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-siz
 </style>
 </head>
 <body>
+<canvas id="ink" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"></canvas>
+
 
 <header class="top">
   <a href="#"><img class="logo" src="https://images.squarespace-cdn.com/content/v1/59147685ebbd1a46db5e4cfb/8bbd773b-7a6a-4b92-aaa3-68d6f99afa16/White_horizontal.png?format=500w" alt="Boulders"></a>
@@ -729,7 +731,6 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers
     x.globalCompositeOperation='source-over'})();
 }
 </script>
-<canvas id="ink" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60;mix-blend-mode:screen"></canvas>
 <script>
 // cursor ink: a glowing dotted ink blot that spreads behind the cursor and slowly fades
 (()=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
@@ -740,7 +741,7 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers
  document.addEventListener('pointerleave',()=>on=0);
  const n=(a,b,t)=>Math.sin(a*.09+t*1.3)*Math.cos(b*.11-t*.9)+Math.sin((a+b)*.05+t*.7);
  function frame(t){requestAnimationFrame(frame);t/=1000;
-  if(on){const px=sx,py=sy;sx+=(mx-sx)*.18;sy+=(my-sy)*.18;const sp=Math.min(1,Math.hypot(sx-px,sy-py)/30),R=50+sp*20;
+  if(on){const px=sx,py=sy;sx+=(mx-sx)*.18;sy+=(my-sy)*.18;const sp=Math.min(1,Math.hypot(sx-px,sy-py)/30),R=64+sp*24;
    const c0=Math.max(0,((sx-R)/G)|0),c1=Math.min(cols-1,((sx+R)/G)|0),r0=Math.max(0,((sy-R)/G)|0),r1=Math.min(rows-1,((sy+R)/G)|0);
    for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const dx=c*G-sx,dy=r*G-sy,d=Math.hypot(dx,dy)/R;if(d<1){const i=r*cols+c;f[i]=Math.min(1,f[i]+(1-d)*(1-d)*.12)}}}
   x.clearRect(0,0,W,H);let any=0;
