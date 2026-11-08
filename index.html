@@ -544,7 +544,7 @@ function climb(cv,opt={}){
   dots(sh.x,sh.y,hip.x,hip.y,9);
   for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
   const cel=t<(c.cel||0),cp=cel?(t-c.cs)/1400:0,pump=Math.abs(Math.sin(cp*Math.PI*3));
-  if(cel){limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,sh.x+7*S,sh.y-(14+10*pump)*S,-1)}else{limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,c.l[1].x,c.l[1].y,1)}limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1,24*S);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1,24*S);
+  if(cel){limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,sh.x+7*S,sh.y-(14+10*pump)*S,-1)}else{limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,c.l[1].x,c.l[1].y,1)}limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
   // soft glow on hands/feet
   party=party.filter(p=>(p.l-=dt/900)>0);party.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;x.fillStyle=`rgba(255,255,255,${p.l})`;x.fillRect(p.x-.8,p.y-.8,1.6,1.6)});
   c.l.forEach(l=>{x.fillStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(l.x,l.y,6*S,0,6.283);x.fill()})}
@@ -571,8 +571,8 @@ function drawer(cv){
   // cumulative distance along the path
   len=0;path.forEach((p,i)=>{if(i)len+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);p.s=len});
   // dotted holds scattered around the word band
-  holds=[];let k=0;while(holds.length<(W<700?120:220)&&k++<6000){const hh={x:X0-30+rnd()*(tw+60),y:Y0-h*.8+rnd()*h*2.8,r:(2.5+rnd()*2.5)*S,d:[]};
-   if(holds.every(o=>Math.hypot(o.x-hh.x,o.y-hh.y)>20*S)){for(let i=0;i<9;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*hh.r;hh.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(hh)}}
+  holds=[];let k=0;while(holds.length<(W<700?380:700)&&k++<6000){const hh={x:X0-30+rnd()*(tw+60),y:Y0-h*.8+rnd()*h*2.8,r:(2.5+rnd()*2.5)*S,d:[]};
+   if(holds.every(o=>Math.hypot(o.x-hh.x,o.y-hh.y)>11*S)){for(let i=0;i<9;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*hh.r;hh.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(hh)}}
   const p0=path[0];c={s:0,fin:0,bx:p0.x-8*S,by:p0.y+20*S,l:[0,1,2,3].map(()=>({h:-1,x:p0.x,y:p0.y+20*S,fx:0,fy:0,t:1}))};
   [0,2,3].forEach(k=>grab(k,true))}
  const OFF=[[-14,-20],[12,-22],[-10,24],[10,24]];
@@ -592,8 +592,8 @@ function drawer(cv){
   // body hangs just below-left of the pen hand
   c.bx+=(pen.x-8*S-c.bx)*Math.min(1,dt*6);c.by+=(pen.y+20*S-c.by)*Math.min(1,dt*6);
   // the other three limbs step to fresh holds when they get stretched, one at a time
-  if(c.l.every(l=>l.t>=1))for(const k of [0,2,3]){const l=c.l[k];if(Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))>(k?14:22)*S){grab(k);break}}
-  c.l.forEach((l,k)=>{if(k===1)return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.38);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*6*S}else{l.x=h.x;l.y=h.y}});
+  if(c.l.every(l=>l.t>=1))for(const k of [0,2,3]){const l=c.l[k];if(Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))>(k?11:14)*S){grab(k);break}}
+  c.l.forEach((l,k)=>{if(k===1)return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.26);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*6*S}else{l.x=h.x;l.y=h.y}});
   c.l[1].x=pen.x;c.l[1].y=pen.y;
   x.clearRect(0,0,W,H);
   holds.forEach((h,i)=>{x.fillStyle=c.l.some(l=>l.h===i)?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
@@ -603,7 +603,7 @@ function drawer(cv){
   // climber
   x.fillStyle='#fff';const sh={x:c.bx,y:c.by-9*S},hip={x:c.bx,y:c.by+9*S};dots(sh.x,sh.y,hip.x,hip.y,9);
   for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
-  limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,pen.x,pen.y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1,24*S);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1,24*S);
+  limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,pen.x,pen.y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
   // the pen: a short stick in his hand with a bright tip on the line
   const ang=Math.atan2(pen.y-sh.y,pen.x-sh.x);x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=1.4*S;x.beginPath();x.moveTo(pen.x-Math.cos(ang-.5)*10*S,pen.y-Math.sin(ang-.5)*10*S);x.lineTo(pen.x,pen.y);x.stroke();
   x.fillStyle='#fff';x.shadowColor='#fff';x.shadowBlur=12;x.beginPath();x.arc(pen.x,pen.y,1.8*S,0,6.283);x.fill();x.shadowBlur=0}
