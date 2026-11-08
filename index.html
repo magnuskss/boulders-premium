@@ -566,13 +566,19 @@ function drawer(cv){
  function init(re){if(!re)cv.parentElement.style.height='';W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
   // fit the word into the free space under the buttons, at any screen size
   const cr=cv.getBoundingClientRect(),ac=cv.parentElement.querySelector('.acts'),top=ac?ac.getBoundingClientRect().bottom-cr.top+30:10;
-  const word='BOULDERS',adv=1.18,k8=word.length*adv-.38;let h=W*.96/k8;
+  const word='BOULDERS',adv=1.18,k8=word.length*adv-.38;let h=W*.8/k8;
   S=Math.max(.6,Math.min(1.15,.5+h/200));let room=H-top-14;const need=h*1.35+62*S-room;if(need>1){const f=cv.parentElement;f.style.height=(f.offsetHeight+need+10)+'px';return requestAnimationFrame(()=>init(1))}S=Math.max(.6,Math.min(1.15,.5+h/200));
   const tw=h*k8,X0=(W-tw)/2,Y0=Math.max(top+h*.3,top+(room-h-62*S)/2+h*.3);
   // resample every stroke to ~2px steps; pen-up moves are flagged so no line is drawn there
-  path=[];[...word].forEach((ch,li)=>L[ch].forEach(st=>{for(let i=0;i<st.length;i++){const p=[X0+(li*adv+st[i][0])*h,Y0+st[i][1]*h];
-   if(i===0){path.push({x:p[0],y:p[1],up:1});continue}const q=path[path.length-1],n=Math.max(1,Math.hypot(p[0]-q.x,p[1]-q.y)/2|0);
-   for(let k=1;k<=n;k++)path.push({x:q.x+(p[0]-q.x)*k/n,y:q.y+(p[1]-q.y)*k/n})}}));
+  // hand-drawn strokes: rounded corners (Chaikin) plus a gentle wobble, then resampled every ~2px
+  const chaikin=a=>{for(let it=0;it<3;it++){const o=[a[0]];for(let k=0;k<a.length-1;k++){const P=a[k],Q=a[k+1];o.push([P[0]*.75+Q[0]*.25,P[1]*.75+Q[1]*.25],[P[0]*.25+Q[0]*.75,P[1]*.25+Q[1]*.75])}o.push(a[a.length-1]);a=o}return a};
+  path=[];let wob=rnd()*100;[...word].forEach((ch,li)=>L[ch].forEach(st=>{const pts=chaikin(st.map(q=>[X0+(li*adv+q[0])*h,Y0+q[1]*h]));
+   pts.forEach((p,i)=>{if(i===0){path.push({x:p[0],y:p[1],up:1});return}const q=path[path.length-1],n=Math.max(1,Math.hypot(p[0]-q.x,p[1]-q.y)/2|0);
+    for(let k=1;k<=n;k++){wob+=.06;const w=h*.012;path.push({x:q.x+(p[0]-q.x)*k/n+Math.sin(wob*1.7)*w,y:q.y+(p[1]-q.y)*k/n+Math.cos(wob*1.3)*w})}})}));
+  // pen slows into curves and speeds up on straights, like a real hand
+  path.forEach((p,i)=>{const a=path[Math.max(0,i-3)],b=path[Math.min(path.length-1,i+3)];if(p.up||b.up){p.v=.6;return}
+   const t1=Math.atan2(p.y-a.y,p.x-a.x),t2=Math.atan2(b.y-p.y,b.x-p.x);let d=Math.abs(t2-t1);if(d>Math.PI)d=6.283-d;p.v=Math.max(.45,1.15-d*1.3)});
+  for(let k=0;k<4;k++)path.forEach((p,i)=>{if(i&&i<path.length-1)p.v=(path[i-1].v+p.v+path[i+1].v)/3});
   // cumulative distance along the path
   len=0;path.forEach((p,i)=>{if(i)len+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);p.s=len});
   // dotted holds scattered around the word band
@@ -597,7 +603,7 @@ function drawer(cv){
   if(c.mode==='draw'){
    if(Math.hypot(c.px-T.x,c.py-T.y)<1.5*S){if(c.s<len){const k=at(c.s+.01);
      if(path[k].up&&path[k].s>c.s){c.s=path[k].s;T=pos(c.s);c.mode='climb'}
-     else{const ns=Math.min(len,c.s+240*S*dt),N=pos(ns);if(reach(N)){c.s=ns;T=N;c.px=N.x;c.py=N.y}else c.mode='climb'}}}
+     else{const ns=Math.min(len,c.s+230*S*dt*(path[at(c.s)].v||1)),N=pos(ns);if(reach(N)){c.s=ns;T=N;c.px=N.x;c.py=N.y}else c.mode='climb'}}}
    else{const dx=T.x-c.px,dy=T.y-c.py,d=Math.hypot(dx,dy),m=Math.min(d,320*S*dt);c.px+=dx/d*m;c.py+=dy/d*m}
    L1.x=c.px;L1.y=c.py}
   if(c.mode!=='draw'){
