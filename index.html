@@ -162,8 +162,12 @@ h2 em{color:#9c9c9c}
 
 /* offer */
 .offer{position:relative;border-radius:32px;overflow:hidden;min-height:82vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:4vw;gap:4vw}
-.offer>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55) grayscale(1)}
-.offer::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,5,5,.85),rgba(5,5,5,.2))}
+.offer>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.6) saturate(1.5) contrast(1.1)}
+.offer::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(5,5,5,.85),rgba(5,5,5,.15)),radial-gradient(60% 70% at 85% 20%,rgba(255,43,214,.45),transparent 70%),radial-gradient(60% 70% at 15% 95%,rgba(0,229,255,.4),transparent 70%);mix-blend-mode:normal}
+.offer{box-shadow:0 0 0 1px rgba(255,43,214,.35),0 0 80px -20px rgba(255,43,214,.5),0 0 120px -30px rgba(0,229,255,.45)}
+.ticket{border:1px solid rgba(255,255,255,.18);box-shadow:0 0 40px -10px rgba(255,43,214,.55)}
+.ticket .price{background:linear-gradient(120deg,#ff2bd6,#ffe600 45%,#39ff14 70%,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 24px rgba(255,43,214,.45))}
+.ticket li span{color:#ff2bd6!important;text-shadow:0 0 12px rgba(255,43,214,.7)}
 .offer>*:not(img){position:relative;z-index:2}
 .ticket{border-radius:26px;padding:30px;justify-self:end;width:min(440px,100%)}
 .ticket .was{color:var(--dim);text-decoration:line-through;font-size:13px}
@@ -220,7 +224,7 @@ h2 em{color:#9c9c9c}
 
 /* floating holds */
 #holds{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:5;overflow:hidden}
-.hold{position:absolute;width:var(--s);pointer-events:auto;will-change:transform;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 36px rgba(255,255,255,.22))}
+.hold{position:absolute;width:var(--s);pointer-events:auto;will-change:transform;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 22px var(--c)) drop-shadow(0 0 60px color-mix(in srgb,var(--c) 55%,transparent))}
 .hold svg{width:100%;height:auto;display:block;transition:transform 1s var(--ease)}
 .hold:hover svg{transform:rotate(-8deg) scale(1.06)}
 @media (max-width:980px){.hold{width:calc(var(--s)*.42)}.hold:nth-child(odd){margin-left:-6vw}.hold:nth-child(even){margin-left:4vw}}
@@ -504,9 +508,10 @@ const SH={ // [path, bolt x, bolt y]
  pinch:['M70 18C98 8 120 22 124 50L134 150C136 176 120 194 98 194 76 194 62 178 60 152L50 56C48 36 56 24 70 18Z',92,100],
  volume:['M10 150 96 14 206 128Z',112,98],
  pocket:['M24 100C14 58 52 18 108 18 166 18 200 56 196 98 192 140 152 166 106 164 60 162 32 140 24 100Z',108,64]};
-const g=(id,t)=>{const [d,bx,by]=SH[t];return `<svg viewBox="0 0 220 210" xmlns="http://www.w3.org/2000/svg">
+const NEON=[['#ff2bd6','#5a0050'],['#39ff14','#0b4d00'],['#00e5ff','#003a52'],['#ffe600','#5c4300'],['#ff5a1f','#5c1300'],['#a855ff','#2a0066']];
+const g=(id,t)=>{const [d,bx,by]=SH[t];const [nc,nd]=NEON[id%NEON.length];return `<svg viewBox="0 0 220 210" xmlns="http://www.w3.org/2000/svg">
 <defs>
- <radialGradient id="b${id}" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#d4d4d4"/><stop offset="1" stop-color="#4a4a4a"/></radialGradient>
+ <radialGradient id="b${id}" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#ffffff"/><stop offset=".22" stop-color="${nc}"/><stop offset="1" stop-color="${nd}"/></radialGradient>
  <linearGradient id="r${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/></linearGradient>
  <radialGradient id="o${id}" cx="50%" cy="100%" r="80%"><stop offset="0" stop-color="#000" stop-opacity=".7"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
  <filter id="n${id}"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="${id}"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.55"/><feComposite in2="SourceGraphic" operator="in"/></filter>
@@ -530,7 +535,7 @@ const box=document.getElementById('holds');
 const M=[['#features',58,130,-22,'pocket'],['#intro',62,150,18,'crimp'],['#haller',48,140,-35,'pinch'],['#community',60,170,10,'sloper'],['.final',40,130,-12,'jug']];
 const mid=M.map(m=>document.querySelector(m[0]));
 M.forEach(m=>L.push([m[4],0,m[1],m[2],m[3],0]));
-box.innerHTML=L.map((h,i)=>`<div class="hold" data-i="${i}" style="--s:${h[3]}px;left:${h[2]}vw">${g(i+1,h[0])}</div>`).join('');
+box.innerHTML=L.map((h,i)=>`<div class="hold" data-i="${i}" style="--s:${h[3]}px;--c:${NEON[(i+1)%NEON.length][0]};left:${h[2]}vw">${g(i+1,h[0])}</div>`).join('');
 const els=[...box.children];
 function place(){const H=document.documentElement.scrollHeight;box.style.height=H+'px';els.forEach((el,i)=>{const k=i-(L.length-M.length);el.style.top=(k>=0&&mid[k]?mid[k].offsetTop-(mid[k].id==='features'?40:0)-L[i][3]*.45:L[i][1]/100*H)+'px';el.style.transform=`rotate(${L[i][4]}deg)`})}
 place();addEventListener('resize',place);addEventListener('load',place);
