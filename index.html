@@ -586,7 +586,7 @@ function drawer(cv){
  const limb=(sx,sy,ex,ey,bend)=>{const L2=Math.hypot(ex-sx,ey-sy),k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
  let last=0;function frame(t){requestAnimationFrame(frame);if(!vis){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
   // pen moves at a steady speed; faster through pen-up jumps
-  if(c.s<len){const i=at(c.s),up=path[Math.min(path.length-1,i+1)].up;c.s=Math.min(len,c.s+(up?260:85)*S*dt)}
+  if(c.s<len){const i=at(c.s),up=path[Math.min(path.length-1,i+1)].up;c.s=Math.min(len,c.s+(up?55:85)*S*dt)}
   else if(!c.fin)c.fin=t+3200;else if(t>c.fin){c.s=0;c.fin=0}
   const pi=at(c.s),pen=path[pi];
   // body hangs just below-left of the pen hand
