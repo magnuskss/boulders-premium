@@ -215,6 +215,11 @@ h2 em{color:#9c9c9c}
 .final>img{position:absolute;inset:-6% 0;width:100%;height:112%;object-fit:cover;filter:brightness(.45) grayscale(1)}
 .final::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,var(--bg),transparent 25%,transparent 70%,var(--bg))}
 .final>*:not(canvas){position:relative;z-index:2}
+.final>*:not(canvas):not(.rs-hud){pointer-events:none}.final a{pointer-events:auto}
+.rs-hud{position:absolute!important;top:16vh;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;font-size:12px;color:var(--dim);white-space:nowrap;z-index:3!important}
+.rs-hud span:nth-child(2){color:var(--ink);font-weight:600}.rs-hud i{font-style:normal}.rs-hud b{color:#ff2bd6;font-weight:600;min-width:22px}
+.rs-hud .dot{width:6px;height:6px;border-radius:50%;background:#ff2bd6;box-shadow:0 0 10px #ff2bd6}.rs-hud .sep{width:1px;height:14px;background:var(--line)}
+.rs-hud button{all:unset;cursor:pointer;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}.rs-hud button:hover{background:rgba(255,255,255,.08)}
 .final h2{font-size:clamp(64px,11vw,190px);font-style:italic}
 .final .acts{display:flex;gap:10px;margin-top:40px;flex-wrap:wrap;justify-content:center}
 
@@ -404,6 +409,7 @@ footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-siz
 
 <section class="final">
   <canvas class="wave" id="wave2"></canvas>
+  <div class="rs-hud glass"><span class="dot"></span><span>Routesetter</span><i>Klik på grebene</i><span class="sep"></span>Grad <b>—</b><button type="button">Ryd</button></div>
   <div class="eyebrow reveal">Klar til at sende?</div>
   <h2 class="reveal" style="margin-top:22px">Dit andet<br>hjem venter.</h2>
   <div class="acts reveal"><a class="btn" href="https://boulders.dk">Bliv medlem <span class="ar">→</span></a><a class="btn ghost glass" href="#intro">Prøv for 99 kr</a></div>
@@ -489,7 +495,7 @@ function climb(cv){
   const gx=mx??c.g.x,gy=my??c.g.y;
   if(c.l.some(l=>l.t<1))return;if(t<c.wait)return;
   const dx=gx-c.bx,dy=gy-c.by,d=Math.hypot(dx,dy);
-  if(mx!=null){if(d<26*S){if(!c.done){c.done=1;c.cel=t+1800;for(let i=0;i<70;i++){const a=Math.random()*6.283,v=1+Math.random()*3.5;party.push({x:c.bx,y:c.by-20*S,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,l:1})}}return}if(d>70*S)c.done=0}
+  if(mx!=null){if(d<26*S){if(!c.done){c.done=1;c.cs=t;c.cel=t+1400;for(let i=0;i<14;i++){const a=i/14*6.283;party.push({x:c.bx,y:c.by-12*S,vx:Math.cos(a)*.55,vy:Math.sin(a)*.55,l:1})}}return}if(d>70*S)c.done=0}
   if(t<(c.cel||0))return;if(d<14*S)return;
   // climb like a person: limbs take turns (right hand, left foot, left hand, right foot); each one reaches for the free
   // hold nearest its ideal spot ahead of the body, and must actually gain ground toward the goal
@@ -512,18 +518,57 @@ function climb(cv){
   holds.forEach((h,i)=>{const used=c.l.some(l=>l.h===i),pn=mx==null?0:Math.max(0,1-Math.hypot(h.x-mx,h.y-my)/160);x.fillStyle=used?'rgba(255,255,255,.95)':`rgba(255,255,255,${.22+pn*.5})`;
    h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
   // climber
-  const jump=t<(c.cel||0)?-Math.abs(Math.sin(t/140))*7*S:0;x.fillStyle='#fff';const hip={x:c.bx,y:c.by+9*S+jump},sh={x:c.bx,y:c.by-9*S+jump};
+  const jump=t<(c.cel||0)?-Math.sin(Math.min(1,(t-c.cs)/450)*Math.PI)*4*S:0;
+  if(t<(c.cel||0)){const p=(t-c.cs)/1400,gr=x.createRadialGradient(c.bx,c.by,0,c.bx,c.by,38*S);gr.addColorStop(0,`rgba(255,255,255,${.22*(1-p)})`);gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(c.bx-40*S,c.by-40*S,80*S,80*S)}x.fillStyle='#fff';const hip={x:c.bx,y:c.by+9*S+jump},sh={x:c.bx,y:c.by-9*S+jump};
   dots(sh.x,sh.y,hip.x,hip.y,9);
   for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
-  const cel=t<(c.cel||0),w=Math.sin(t/90)*5*S;
-  if(cel){limb(sh.x,sh.y,sh.x-12*S+w,sh.y-24*S,1);limb(sh.x,sh.y,sh.x+12*S-w,sh.y-24*S,-1)}else{limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,c.l[1].x,c.l[1].y,1)}limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
+  const cel=t<(c.cel||0),cp=cel?(t-c.cs)/1400:0,pump=Math.abs(Math.sin(cp*Math.PI*3));
+  if(cel){limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,sh.x+7*S,sh.y-(14+10*pump)*S,-1)}else{limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,c.l[1].x,c.l[1].y,1)}limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
   // soft glow on hands/feet
-  party=party.filter(p=>(p.l-=dt/1400)>0);party.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.vx*=.98;x.fillStyle=`rgba(255,255,255,${p.l})`;x.fillRect(p.x-1,p.y-1,2,2)});
+  party=party.filter(p=>(p.l-=dt/900)>0);party.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;x.fillStyle=`rgba(255,255,255,${p.l})`;x.fillRect(p.x-.8,p.y-.8,1.6,1.6)});
   c.l.forEach(l=>{x.fillStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(l.x,l.y,6*S,0,6.283);x.fill()})}
  requestAnimationFrame(frame)}
 climb(document.getElementById('wave'));
 
-wave(document.getElementById('wave2'),{y:.5,ph:2.1,amp:.1,seed:40,speed:.8});
+// final section: build your own route. click dotted holds to add them, the route is numbered and graded
+function setter(cv,sec){
+ const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2),hud=sec.querySelector('.rs-hud'),gEl=hud.querySelector('b'),nEl=hud.querySelector('i');
+ let W,H,S,holds=[],route=[],hov=-1,vis=true,born=[];
+ const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(31);
+ function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);S=W<700?.8:1;holds=[];
+  let k=0;while(holds.length<(W<700?45:90)&&k++<5000){const r=(6+rnd()*9)*S,h={x:30+rnd()*(W-60),y:40+rnd()*(H-80),r,rot:rnd()*3,sq:.55+rnd()*.4,d:[]};
+   if(holds.every(o=>Math.hypot(o.x-h.x,o.y-h.y)>o.r+h.r+38*S)){const n=Math.round(r*r*.5);for(let i=0;i<n;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*r;let px=Math.cos(a)*q,py=Math.sin(a)*q*h.sq;h.d.push([px*Math.cos(h.rot)-py*Math.sin(h.rot),px*Math.sin(h.rot)+py*Math.cos(h.rot)])}holds.push(h)}}
+  route=[];upd()}
+ const GR=['4','5','5+','6a','6b','6c','7a','7b','7c','8a'];
+ function upd(){nEl.textContent=route.length?route.length+' greb':'Klik på grebene';
+  if(route.length<2){gEl.textContent='—';return}
+  let sum=0,up=0;for(let i=1;i<route.length;i++){const a=holds[route[i-1]],b=holds[route[i]];sum+=Math.hypot(a.x-b.x,a.y-b.y)/S;up+=Math.max(0,a.y-b.y)}
+  const avg=sum/(route.length-1),small=route.reduce((s,i)=>s+holds[i].r,0)/route.length/S;
+  gEl.textContent=GR[Math.max(0,Math.min(9,Math.round((avg-60)/28+(12-small)*.35)))]}
+ const pick=e=>{const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;let b=-1,bd=40*S;holds.forEach((h,i)=>{const d=Math.hypot(h.x-mx,h.y-my)-h.r;if(d<bd){bd=d;b=i}});return b};
+ sec.addEventListener('pointermove',e=>{hov=pick(e);sec.style.cursor=hov>=0?'pointer':''});
+ sec.addEventListener('pointerleave',()=>hov=-1);
+ sec.addEventListener('click',e=>{if(e.target.closest('a,button'))return;const i=pick(e);if(i<0)return;const at=route.indexOf(i);
+  if(at>=0)route.splice(at,1);else{route.push(i);born[i]=performance.now()}upd()});
+ hud.querySelector('button').addEventListener('click',()=>{route=[];upd()});
+ new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
+ init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
+ const C='#ff2bd6';
+ function frame(t){requestAnimationFrame(frame);if(!vis)return;x.clearRect(0,0,W,H);
+  // route line: dotted, drawn between consecutive holds
+  x.fillStyle=C;for(let i=1;i<route.length;i++){const a=holds[route[i-1]],b=holds[route[i]],L=Math.hypot(a.x-b.x,a.y-b.y),n=L/7|0;
+   for(let j=1;j<n;j++){const f=j/n,o=(t/600+j)%1;x.globalAlpha=.25+.35*Math.sin(f*Math.PI);x.fillRect(a.x+(b.x-a.x)*f-1,a.y+(b.y-a.y)*f-1,2,2)}}
+  x.globalAlpha=1;
+  holds.forEach((h,i)=>{const at=route.indexOf(i),on=at>=0,hv=i===hov;let sc=1;
+   if(on){const p=Math.min(1,(t-(born[i]||0))/380);sc=1+Math.sin(p*Math.PI)*.35;
+    const gr=x.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r*3);gr.addColorStop(0,'rgba(255,43,214,.35)');gr.addColorStop(1,'rgba(255,43,214,0)');x.fillStyle=gr;x.fillRect(h.x-h.r*3,h.y-h.r*3,h.r*6,h.r*6)}
+   x.fillStyle=on?C:hv?'rgba(255,255,255,.95)':'rgba(255,255,255,.32)';
+   h.d.forEach(([a,b])=>x.fillRect(h.x+a*sc-.8,h.y+b*sc-.8,1.6,1.6));
+   if(on){x.font=`600 ${11*S}px Inter,system-ui,sans-serif`;x.textAlign='center';x.fillStyle='#fff';
+    const lab=at===0?'START':at===route.length-1&&route.length>1?'TOP':String(at+1);x.fillText(lab,h.x,h.y-h.r-8*S)}})}
+ requestAnimationFrame(frame)}
+setter(document.getElementById('wave2'),document.querySelector('.final'));
+
 
 // card dot-glow follows cursor
 document.querySelectorAll('.fcard').forEach(c=>c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--cx',e.clientX-r.left+'px');c.style.setProperty('--cy',e.clientY-r.top+'px')}));
