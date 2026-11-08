@@ -1,0 +1,4 @@
+.claude/
+dist/
+.wrangler/
+node_modules/

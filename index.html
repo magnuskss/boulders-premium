@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boulders — Danmarks bouldering netværk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://storage.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050505; --bg2:#0c0c0c; --ink:#f5f5f5; --mute:rgba(245,245,245,.58); --dim:rgba(245,245,245,.36);
+  --line:rgba(255,255,255,.12); --warm:#ffffff; --amber:#bdbdbd;
+  --serif:"Instrument Serif",Georgia,serif; --sans:"Inter",system-ui,sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --IMG:"https://storage.googleapis.com/boulderscss/";
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+img,video{display:block;max-width:100%}
+::selection{background:var(--warm);color:#000}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:300;opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* glass */
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 30px 60px -30px rgba(0,0,0,.8)}
+.pill{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;border:1px solid var(--line);font-size:11px;color:var(--mute);background:rgba(255,255,255,.03);white-space:nowrap}
+.serif{font-family:var(--serif);font-style:italic;font-weight:400}
+.eyebrow{font-size:12px;color:var(--mute);letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:"";width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff}
+
+/* nav */
+header.top{position:fixed;inset:18px 24px auto;z-index:200;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+header.top>*{pointer-events:auto}
+.logo{height:22px;opacity:.95}
+.navpill{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px;border-radius:13px}
+.navcta{padding:9px 16px;font-size:13px}
+.navpill a{padding:7px 14px;border-radius:9px;border:1px solid var(--line);font-size:13px;color:var(--mute);transition:color .3s,background .3s}
+.navpill a:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+.navpill a.cta{background:var(--ink);color:#050505;font-weight:500;margin-left:4px}
+.navpill a.cta:hover{background:#fff}
+.burger{display:none;width:44px;height:44px;border-radius:50%;place-items:center}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:var(--ink);color:#050505;font-weight:500;font-size:14px;
+  transition:transform .5s var(--ease),background .3s,box-shadow .5s}
+.btn:hover{background:#fff;box-shadow:0 10px 40px -10px rgba(255,255,255,.45)}
+.btn .ar{transition:transform .4s var(--ease)}.btn:hover .ar{transform:translateX(4px)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{background:rgba(255,255,255,.06);box-shadow:none}
+
+/* hero — dot wave */
+.hero{position:relative;height:100vh;min-height:760px;overflow:hidden;background:#000;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;padding:0 4vw!important}
+canvas.wave{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(120% 80% at 50% 30%,transparent 40%,rgba(0,0,0,.7) 100%),linear-gradient(180deg,transparent 45%,rgba(0,0,0,.85) 82%,var(--bg) 100%)}
+.hero-copy{position:relative;z-index:4;max-width:980px;margin-bottom:7vh}
+.chip{display:inline-flex;align-items:center;gap:9px;padding:5px 13px 5px 5px;border-radius:999px;font-size:12px;color:var(--mute);opacity:0;animation:fade 1s var(--ease) .2s forwards}
+.chip i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);font-style:normal;font-size:10px;color:#fff}
+.hero-copy h1{font-weight:500;font-size:clamp(46px,6.4vw,104px);line-height:1.02;letter-spacing:-.045em;margin-top:22px}
+.hero-copy h1 em{font-family:var(--serif);font-weight:400;font-style:italic;letter-spacing:-.02em;color:#a3a3a3;padding-right:.04em}
+.hero-copy h1 .l{display:block;overflow:hidden;padding-bottom:.08em}
+.hero-copy h1 .l span{display:inline-block;transform:translateY(110%);animation:rise 1.4s var(--ease) forwards}
+.hero-copy h1 .l:nth-child(2) span{animation-delay:.12s}
+@keyframes rise{to{transform:none}}
+.hero-copy p{color:var(--mute);max-width:44ch;line-height:1.6;margin:22px auto 30px;opacity:0;animation:fade 1.2s var(--ease) .5s forwards}
+.hero-copy .acts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fade 1.2s var(--ease) .65s forwards}
+@keyframes fade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.strip{position:relative;z-index:4;width:100%;display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding:18px 0 24px;font-size:12px;color:var(--mute);opacity:0;animation:fade 1.2s var(--ease) 1s forwards}
+.strip span{display:flex;align-items:center;gap:10px}.strip b{color:var(--ink);font-weight:500}
+.strip .sq{width:16px;height:16px;border-radius:4px;border:1px solid var(--line);display:grid;place-items:center}
+.strip .sq::before{content:"";width:4px;height:4px;border-radius:50%;background:#fff;box-shadow:0 0 8px #fff}
+.scrollcue{position:absolute;left:50%;top:calc(100% - 4px);width:1px;height:0}
+
+/* wall — color under cursor, halftone everywhere else */
+.wallwrap{display:grid;place-items:center}
+.wall{position:relative;width:min(100%,128vh);aspect-ratio:3/2;border-radius:28px;overflow:hidden;cursor:crosshair;background:#000;border:1px solid var(--line)}
+.wall img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.wall .bw{filter:grayscale(1) brightness(.55) contrast(1.15)}
+.wall .col{-webkit-mask:radial-gradient(240px circle at var(--mx,50%) var(--my,45%),#000 25%,transparent 72%);mask:radial-gradient(240px circle at var(--mx,50%) var(--my,45%),#000 25%,transparent 72%)}
+.wall .ht{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(#000 1.2px,transparent 1.7px);background-size:5px 5px;opacity:.55;
+  -webkit-mask:radial-gradient(240px circle at var(--mx,50%) var(--my,45%),transparent 30%,#000 75%);mask:radial-gradient(240px circle at var(--mx,50%) var(--my,45%),transparent 30%,#000 75%)}
+.wall .cap{position:absolute;left:22px;top:20px;z-index:4;display:flex;gap:8px}
+.wall .hint{position:absolute;right:22px;top:20px;z-index:4}
+.spot{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;cursor:pointer;z-index:3}
+.spot::before{content:"";position:absolute;inset:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 rgba(255,255,255,.6);animation:ping 2.4s var(--ease) infinite;transition:inset .4s var(--ease)}
+.spot::after{content:"";position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(255,255,255,.6);transform:scale(.6);opacity:0;transition:.5s var(--ease)}
+.spot:hover::before,.spot.on::before{inset:12px}
+.spot:hover::after,.spot.on::after{transform:scale(1.5) rotate(90deg);opacity:1}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}70%,100%{box-shadow:0 0 0 16px rgba(255,255,255,0)}}
+.tip{position:absolute;left:50%;bottom:calc(100% + 16px);transform:translate(-50%,8px) scale(.96);opacity:0;pointer-events:none;
+  width:220px;border-radius:16px;padding:14px;transition:.45s var(--ease);text-align:left;cursor:default}
+.spot:hover .tip,.spot.on .tip{opacity:1;transform:translate(-50%,0) scale(1)}
+.tip b{font-family:var(--serif);font-style:italic;font-weight:400;font-size:24px;display:block;line-height:1}
+.tip .row{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--mute)}
+.tip .meter{display:flex;gap:3px;margin-top:8px}.tip .meter i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.15)}.tip .meter i.f{background:#fff}
+
+/* feature cards */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+.fcard{border-radius:20px;padding:20px 22px 22px;min-height:230px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .6s var(--ease),border-color .4s;position:relative;overflow:hidden}
+.fcard::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background-image:radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.3px);background-size:9px 9px;
+  -webkit-mask:radial-gradient(260px circle at var(--cx,50%) var(--cy,50%),#000,transparent 70%);mask:radial-gradient(260px circle at var(--cx,50%) var(--cy,50%),#000,transparent 70%)}
+.fcard:hover::before{opacity:1}
+.fcard:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.3)}
+.fcard .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.fcard .ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.fcard .ico svg{width:18px;height:18px}
+.fcard .tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:70%}
+.fcard h3{font-family:var(--serif);font-style:italic;font-weight:400;font-size:34px;letter-spacing:-.01em;line-height:1}
+.fcard p{color:var(--mute);font-size:13px;line-height:1.55;margin-top:8px;max-width:34ch}
+.halftone{position:absolute;inset:0;pointer-events:none;z-index:1;background-image:radial-gradient(rgba(0,0,0,.6) 1.1px,transparent 1.6px);background-size:4px 4px;opacity:.55;transition:opacity .8s var(--ease)}
+:hover>.halftone{opacity:0}
+.dotfield{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.13) 1px,transparent 1.3px);background-size:22px 22px;
+  -webkit-mask:radial-gradient(60% 55% at 50% 50%,#000,transparent);mask:radial-gradient(60% 55% at 50% 50%,#000,transparent)}
+
+/* sections */
+section{position:relative;padding:16vh 4vw}
+h2{font-family:var(--serif);font-weight:400;font-size:clamp(52px,7.4vw,120px);line-height:.92;letter-spacing:-.025em}
+h2 em{color:#9c9c9c}
+.lead{color:var(--mute);line-height:1.65;max-width:42ch}
+.sh{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;flex-wrap:wrap;margin-bottom:7vh}
+
+.statement{text-align:center;padding:20vh 6vw}
+.statement p{font-family:var(--serif);font-size:clamp(34px,4.6vw,74px);line-height:1.08;letter-spacing:-.015em;max-width:22ch;margin:28px auto 0}
+.statement p .w{opacity:.14;transition:opacity .5s}.statement p .w.on{opacity:1}
+.statement p em{color:#9c9c9c}
+.statement .eyebrow{justify-content:center}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);margin-top:10vh}
+.stat{padding:34px 24px 0 0}
+.stat .n{font-family:var(--serif);font-size:clamp(60px,7vw,110px);line-height:1;letter-spacing:-.03em}
+.stat .n sup{font-size:.4em;color:var(--warm)}
+.stat .l{font-size:12px;color:var(--mute);margin-top:10px}
+
+/* film */
+.film{position:relative;border-radius:28px;overflow:hidden;aspect-ratio:16/8;background:#000}
+.film video{width:100%;height:100%;object-fit:cover;filter:grayscale(1) saturate(.9);transform:scale(1.04);transition:transform 1.4s var(--ease)}
+.film video{transition:transform 1.4s var(--ease),filter 1s}.film:hover video{transform:scale(1);filter:grayscale(0)}
+.film::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,5,5,.85),transparent 55%)}
+.film .cap{position:absolute;left:28px;right:28px;bottom:28px;z-index:2;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.film .cap h3{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(36px,4.4vw,68px);line-height:.95}
+.film .badge{border-radius:16px;padding:14px 18px;display:flex;gap:12px;align-items:center;font-size:13px}
+.film .rec{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* pillars */
+.pillars{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px}
+.pc{position:relative;border-radius:24px;overflow:hidden;min-height:560px;display:flex;align-items:flex-end;padding:14px}
+.pc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.78) grayscale(1);transition:transform 1.4s var(--ease),filter .6s}
+.pc:hover img{transform:scale(1.06);filter:brightness(.92) grayscale(0)}
+.pc::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,5,5,.7),transparent 50%);pointer-events:none}
+.pc .g{position:relative;z-index:2;border-radius:18px;padding:20px;width:100%}
+.pc .num{position:absolute;top:18px;left:18px;z-index:2}
+.pc h3{font-family:var(--serif);font-style:italic;font-weight:400;font-size:38px;line-height:1}
+.pc p{color:var(--mute);font-size:13.5px;line-height:1.55;margin-top:8px}
+.pc .more{max-height:0;overflow:hidden;transition:max-height .7s var(--ease)}
+.pc:hover .more{max-height:120px}
+.pc .more .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+
+/* offer */
+.offer{position:relative;border-radius:32px;overflow:hidden;min-height:82vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;padding:4vw;gap:4vw}
+.offer>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55) grayscale(1)}
+.offer::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,5,5,.85),rgba(5,5,5,.2))}
+.offer>*:not(img){position:relative;z-index:2}
+.ticket{border-radius:26px;padding:30px;justify-self:end;width:min(440px,100%)}
+.ticket .was{color:var(--dim);text-decoration:line-through;font-size:13px}
+.ticket .price{font-family:var(--serif);font-size:clamp(120px,13vw,200px);line-height:.85;letter-spacing:-.04em;margin:8px 0 6px}
+.ticket .price small{font-size:.22em;font-style:italic;color:var(--warm);margin-left:6px}
+.ticket ol{list-style:none;border-top:1px solid var(--line);margin:22px 0}
+.ticket li{display:flex;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}
+.ticket li span{font-family:var(--serif);font-style:italic;font-size:22px;color:var(--warm);width:22px}
+.ticket .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px}
+
+/* halls */
+.rail{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 4vw 10px;margin:0 -4vw;scrollbar-width:none;cursor:grab}
+.rail::-webkit-scrollbar{display:none}
+.rail.drag{cursor:grabbing;scroll-snap-type:none}
+.hall{flex:0 0 clamp(270px,26vw,380px);scroll-snap-align:start;position:relative;border-radius:22px;overflow:hidden;aspect-ratio:3/4;user-select:none}
+.hall img{width:100%;height:100%;object-fit:cover;filter:brightness(.72) grayscale(1);transition:transform 1.2s var(--ease),filter .6s;pointer-events:none}
+.hall:hover img{transform:scale(1.07);filter:brightness(.92) grayscale(0)}
+.hall .lab{position:absolute;left:12px;right:12px;bottom:12px;border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.hall .lab b{font-family:var(--serif);font-style:italic;font-weight:400;font-size:26px;display:block;line-height:1}
+.hall .lab small{color:var(--mute);font-size:11px}
+.hall .go{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:.5s var(--ease)}
+.hall:hover .go{background:var(--ink);color:#000;transform:rotate(-45deg)}
+.hall .idx{position:absolute;top:14px;left:14px}
+.railnav{display:flex;gap:8px}
+.railnav button{width:46px;height:46px;border-radius:50%;color:var(--ink);cursor:pointer;font-size:16px;transition:.3s}
+.railnav button:hover{background:rgba(255,255,255,.14)}
+.progress{height:1px;background:var(--line);margin-top:28px;position:relative}
+.progress i{position:absolute;left:0;top:0;height:1px;background:var(--warm);width:20%;transition:width .2s}
+
+/* community grid */
+.ugc{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:240px;gap:14px}
+.u{position:relative;border-radius:20px;overflow:hidden;background:#111}
+.u img,.u video{width:100%;height:100%;object-fit:cover;filter:grayscale(1);transition:transform 1.2s var(--ease),filter .8s}
+.u:hover img,.u:hover video{transform:scale(1.06);filter:grayscale(0)}
+.u.t{grid-row:span 2}.u.w{grid-column:span 2}
+.u .h{position:absolute;left:12px;bottom:12px;font-size:12px;border-radius:999px;padding:6px 12px}
+.u .play{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:10px}
+
+/* reviews */
+.revs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rev{border-radius:22px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;min-height:270px;transition:transform .6s var(--ease)}
+.rev:hover{transform:translateY(-6px)}
+.rev .s{color:var(--warm);letter-spacing:3px;font-size:12px}
+.rev q{font-family:var(--serif);font-size:26px;line-height:1.18;quotes:none;margin:16px 0 22px;display:block}
+.rev .who{display:flex;justify-content:space-between;font-size:13px}.rev .who span{color:var(--mute)}
+
+/* cta */
+.final{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow:hidden;padding:20vh 4vw}
+.final>img{position:absolute;inset:-6% 0;width:100%;height:112%;object-fit:cover;filter:brightness(.45) grayscale(1)}
+.final::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,var(--bg),transparent 25%,transparent 70%,var(--bg))}
+.final>*:not(canvas){position:relative;z-index:2}
+.final h2{font-size:clamp(64px,11vw,190px);font-style:italic}
+.final .acts{display:flex;gap:10px;margin-top:40px;flex-wrap:wrap;justify-content:center}
+
+/* floating holds */
+#holds{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:5;overflow:hidden}
+.hold{position:absolute;width:var(--s);pointer-events:auto;will-change:transform;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 36px rgba(255,255,255,.22))}
+.hold svg{width:100%;height:auto;display:block;transition:transform 1s var(--ease)}
+.hold:hover svg{transform:rotate(-8deg) scale(1.06)}
+@media (max-width:980px){.hold{width:calc(var(--s)*.42)}.hold:nth-child(odd){margin-left:-6vw}.hold:nth-child(even){margin-left:4vw}}
+/* touch: colour + play when in view, header backdrop */
+@media (hover:none),(max-width:980px){
+  header.top::before{content:"";position:fixed;left:0;right:0;top:0;height:96px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(5,5,5,.92),rgba(5,5,5,.6) 60%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    -webkit-mask:linear-gradient(180deg,#000 60%,transparent);mask:linear-gradient(180deg,#000 60%,transparent)}
+  .live img,.live video{filter:grayscale(0) brightness(.92)!important}
+  .live>.halftone{opacity:0}
+  .live .more{max-height:120px}
+  .hero-copy p,.lead{font-size:15.5px}
+}
+footer{padding:70px 4vw 30px;border-top:1px solid var(--line);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px;color:var(--mute);font-size:14px}
+footer h5{color:var(--ink);font-weight:500;font-size:13px;margin-bottom:14px}
+footer li{list-style:none;margin:8px 0}footer a:hover{color:var(--ink)}
+footer .big{grid-column:1/-1;font-family:var(--serif);font-style:italic;font-size:21vw;line-height:.8;color:var(--ink);opacity:.9;letter-spacing:-.04em;margin-top:40px;white-space:nowrap;text-align:center}
+footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-size:12px;border-top:1px solid var(--line);padding-top:18px}
+
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}
+
+@media (max-width:980px){
+  .navpill,.navcta{display:none}.burger{display:grid}
+  .hero{min-height:100svh;height:auto;padding-top:40vh!important}
+  .strip{flex-direction:column;gap:10px}
+  .wall .hint{display:none}
+  .cards{grid-template-columns:1fr}
+  .fcard{min-height:0;gap:26px}
+  .stats{grid-template-columns:1fr 1fr}
+  .pillars,.offer,.revs{grid-template-columns:1fr}.pc{min-height:440px}.pc .more{max-height:none}
+  .ticket{justify-self:stretch}
+  .ugc{grid-template-columns:1fr 1fr;grid-auto-rows:200px}.u.w{grid-column:span 2}
+  footer{grid-template-columns:1fr 1fr}
+  .film{aspect-ratio:4/5}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.hero-copy h1 .l span,.reveal,.hero-copy p,.hero-copy .acts,.chip,.strip{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a href="#"><img class="logo" src="https://images.squarespace-cdn.com/content/v1/59147685ebbd1a46db5e4cfb/8bbd773b-7a6a-4b92-aaa3-68d6f99afa16/White_horizontal.png?format=500w" alt="Boulders"></a>
+  <nav class="navpill glass">
+    <a href="#om">Om</a><a href="#haller">Haller</a><a href="#intro">Første gang</a><a href="#community">Community</a>
+  </nav>
+  <a href="#intro" class="btn navcta">Bliv medlem</a>
+  <a href="#intro" class="burger glass" aria-label="Menu"><svg width="16" height="10" viewBox="0 0 16 10" stroke="currentColor"><path d="M0 1h16M0 9h16"/></svg></a>
+</header>
+
+<section class="hero" id="hero">
+  <canvas class="wave" id="wave"></canvas>
+  <div class="hero-copy">
+    <span class="chip glass"><i>✦</i>11 haller · Ét medlemskab</span>
+    <h1><span class="l"><span>Klatr <em>højere</em> end</span></span><span class="l"><span>du gjorde i går.</span></span></h1>
+    <p>Ubegrænset bouldering, fitness og fællesskab i Danmarks største bouldering netværk. Nye problemer hver eneste uge.</p>
+    <div class="acts"><a class="btn" href="#intro">Prøv for 99 kr <span class="ar">→</span></a><a class="btn ghost" href="#haller">Find din hal</a></div>
+  </div>
+  <div class="strip">
+    <span><span class="sq"></span><b>600+</b> problemer på væggene</span>
+    <span><span class="sq"></span><b>Ny opsætning</b> hver uge</span>
+    <span><span class="sq"></span><b>Åbent til 23</b> alle dage</span>
+  </div>
+</section>
+
+<section class="statement" id="om"><div class="dotfield"></div>
+  <div class="eyebrow reveal">Ét medlemskab · Hele Boulders</div>
+  <p id="stmt">Den bedste væg er den du <em>ikke har klatret endnu.</em> Derfor skruer vi nye problemer hver uge i alle elleve haller — så du altid har en grund til at komme tilbage.</p>
+  <div class="stats reveal">
+    <div class="stat"><div class="n" data-count="11">0</div><div class="l">Haller i hele Danmark</div></div>
+    <div class="stat"><div class="n"><span data-count="600">0</span><sup>+</sup></div><div class="l">Problemer på væggene</div></div>
+    <div class="stat"><div class="n" data-count="4">0</div><div class="l">Gæstepas til venner</div></div>
+    <div class="stat"><div class="n" data-count="0">0</div><div class="l">Erfaring nødvendig</div></div>
+  </div>
+</section>
+
+<section id="features" style="padding-top:0">
+  <div class="cards">
+    <article class="fcard glass reveal">
+      <div class="head"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20 10 6l4 7 3-4 3 11Z"/></svg></span>
+        <div class="tags"><span class="pill">Alle niveauer</span><span class="pill">Nye ruter hver uge</span><span class="pill">Kilter</span></div></div>
+      <div><h3>Bouldering</h3><p>Hundredvis af problemer til alle niveauer. Væggen skrues om hver uge, så den aldrig føles ens.</p></div>
+    </article>
+    <article class="fcard glass reveal">
+      <div class="head"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h3m12 0h3M6 8v8m12-8v8M9 10v4m6-4v4M9 12h6"/></svg></span>
+        <div class="tags"><span class="pill">Hangboards</span><span class="pill">Kettlebells</span><span class="pill">Maskiner</span></div></div>
+      <div><h3>Fitness</h3><p>Styrketræning og klatring under samme tag — alle haller har eget træningsområde.</p></div>
+    </article>
+    <article class="fcard glass reveal">
+      <div class="head"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 10h12v4a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5Zm12 1h1.5a2.5 2.5 0 0 1 0 5H17M9 3c0 2 1.5 2 1.5 4M13 3c0 2 1.5 2 1.5 4"/></svg></span>
+        <div class="tags"><span class="pill">Café</span><span class="pill">Events</span><span class="pill">Gratis WiFi</span></div></div>
+      <div><h3>Fællesskab</h3><p>Den hyggeligste café, hold og events. Kom for klatringen, bliv for menneskerne.</p></div>
+    </article>
+  
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="film reveal">
+    <video src="https://storage.googleapis.com/boulderscss/ig%20ugc/late%20night%20boulder%20promo%20short.mp4" autoplay muted loop playsinline preload="metadata"></video>
+    <div class="cap">
+      <div><div class="eyebrow" style="margin-bottom:14px">Late Night Boulders</div><h3>Når byen sover,<br>klatrer vi.</h3></div>
+      <div class="badge glass"><span class="rec"></span>Åbent til 23 · alle dage</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sh">
+    <h2 class="reveal">Alt i ét <em class="serif">medlemskab</em></h2>
+    <p class="lead reveal d1">Du vælger ikke mellem haller, fitness eller fællesskab. Du får det hele med det samme kort.</p>
+  </div>
+  <div class="pillars">
+    <article class="pc reveal"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/event%20winner%20bouldering.jpg" alt="Bouldering event" loading="lazy">
+      <span class="pill glass num">01</span>
+      <div class="g glass"><h3>Bouldering</h3><p>Hundredvis af ruter til alle niveauer.</p><div class="more"><div class="tags"><span class="pill">V0 — V10+</span><span class="pill">Kilter Board</span><span class="pill">Comps</span></div></div></div></article>
+    <article class="pc reveal d1"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/fitness%20area%20bouldering%20gym" alt="Træningsareal i Boulders" loading="lazy">
+      <span class="pill glass num">02</span>
+      <div class="g glass"><h3>Fitness</h3><p>Maskiner, kettlebells og meget mere.</p><div class="more"><div class="tags"><span class="pill">Hangboards</span><span class="pill">Frie vægte</span></div></div></div></article>
+    <article class="pc reveal d2"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/coffee%20and%20snack.jpg" alt="Café i Boulders" loading="lazy">
+      <span class="pill glass num">03</span>
+      <div class="g glass"><h3>Fællesskab</h3><p>Café, gratis WiFi og nye venner.</p><div class="more"><div class="tags"><span class="pill">Kaffe</span><span class="pill">Events</span><span class="pill">Hold</span></div></div></div></article>
+  </div>
+</section>
+
+<section id="intro">
+  <div class="offer reveal">
+    <img src="https://storage.googleapis.com/boulderscss/ig%20ugc/intro%20to%20bouldering%20cover.jpg" alt="Intro til bouldering" loading="lazy">
+    <div>
+      <div class="eyebrow">Nybegynder?</div>
+      <h2 style="margin-top:22px">Din første<br><em class="serif">session</em></h2>
+      <p class="lead" style="margin-top:24px">Book en intro, mød op i træningstøj og kom i gang. Personalet viser dig det hele — du skal ikke kunne noget på forhånd.</p>
+    </div>
+    <div class="ticket glass">
+      <div style="display:flex;justify-content:space-between"><span class="was">Normalpris 198 kr</span><span class="pill">Intro</span></div>
+      <div class="price">99<small>kr</small></div>
+      <ol><li><span>i</span>Book online</li><li><span>ii</span>Mød op i hallen</li><li><span>iii</span>Klatr løs</li></ol>
+      <div class="tags"><span class="pill">Kun med booking</span><span class="pill">Inkl. klatresko</span><span class="pill">Min. 16 år</span></div>
+      <a class="btn" href="https://boulders.dk" style="width:100%;justify-content:center">Book din første session <span class="ar">→</span></a>
+    </div>
+  </div>
+</section>
+
+<section id="haller">
+  <div class="sh">
+    <div><div class="eyebrow reveal">Ét kort · Alle haller</div><h2 class="reveal" style="margin-top:20px">Elleve haller.<br><em class="serif">Ét hjem.</em></h2></div>
+    <div class="railnav reveal"><button class="glass" id="prev" aria-label="Forrige">←</button><button class="glass" id="next" aria-label="Næste">→</button></div>
+  </div>
+  <div class="rail" id="rail"></div>
+  <div class="progress"><i id="prog"></i></div>
+</section>
+
+<section id="community">
+  <div class="sh">
+    <h2 class="reveal">Livet på<br><em class="serif">væggen</em></h2>
+    <p class="lead reveal d1">Fra første top til comp-sejre. Tag os med @boulders.dk.</p>
+  </div>
+  <div class="ugc reveal">
+    <div class="u t"><video src="https://storage.googleapis.com/boulderscss/ig%20ugc/%40CatchThatDyno.mp4#t=0.5" muted loop playsinline preload="metadata"></video><span class="play glass">▶</span><span class="h glass">@CatchThatDyno</span></div>
+    <div class="u w"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/3%20frirends.JPG" alt="Venner i Boulders" loading="lazy"><span class="h glass">Fællesskab</span></div>
+    <div class="u t"><video src="https://storage.googleapis.com/boulderscss/ig%20ugc/%40Anelivb.mp4#t=0.5" muted loop playsinline preload="metadata"></video><span class="play glass">▶</span><span class="h glass">@Anelivb</span></div>
+    <div class="u"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/girl%20friends.jpg" alt="Venner der klatrer" loading="lazy"><span class="h glass">Sammen</span></div>
+    <div class="u"><img src="https://storage.googleapis.com/boulderscss/ig%20ugc/coffee%20and%20snack.jpg" alt="Kaffe" loading="lazy"><span class="h glass">Café</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="sh"><h2 class="reveal">Det siger<br><em class="serif">medlemmerne</em></h2><p class="lead reveal d1">★★★★★ fra Sydhavn til Aalborg.</p></div>
+  <div class="revs">
+    <div class="rev glass reveal"><div><div class="s">★★★★★</div><q>“What an absolute pearl. Clean, challenging walls with high variety and an outstanding community.”</q></div><div class="who">Malthe Nebelung<span>Odense</span></div></div>
+    <div class="rev glass reveal d1"><div><div class="s">★★★★★</div><q>“Fantastisk kaffe, super gode problemer, dejligt kilterboard. Intet dårligt at sige.”</q></div><div class="who">Rasmus Friislund<span>Aarhus Aaby</span></div></div>
+    <div class="rev glass reveal d2"><div><div class="s">★★★★★</div><q>“Mega lækker hal! God mulighed for at få klatret en masse forskelligt.”</q></div><div class="who">Oliver Hegner<span>Aalborg</span></div></div>
+  </div>
+</section>
+
+<section class="final">
+  <canvas class="wave" id="wave2"></canvas>
+  <div class="eyebrow reveal">Klar til at sende?</div>
+  <h2 class="reveal" style="margin-top:22px">Dit andet<br>hjem venter.</h2>
+  <div class="acts reveal"><a class="btn" href="https://boulders.dk">Bliv medlem <span class="ar">→</span></a><a class="btn ghost glass" href="#intro">Prøv for 99 kr</a></div>
+</section>
+
+<footer>
+  <div><img class="logo" src="https://images.squarespace-cdn.com/content/v1/59147685ebbd1a46db5e4cfb/8bbd773b-7a6a-4b92-aaa3-68d6f99afa16/White_horizontal.png?format=500w" alt="Boulders" style="margin-bottom:16px"><p style="max-width:32ch;line-height:1.6">Danmarks bouldering netværk. Klatring, træning og hygge i 11 haller.</p></div>
+  <div><h5>Klatring</h5><ul><li><a href="#">Medlemskab</a></li><li><a href="#">Priser</a></li><li><a href="#intro">Introhold</a></li></ul></div>
+  <div><h5>Haller</h5><ul><li><a href="#haller">København</a></li><li><a href="#haller">Aarhus</a></li><li><a href="#haller">Aalborg</a></li><li><a href="#haller">Odense</a></li></ul></div>
+  <div><h5>Følg</h5><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">Kontakt</a></li></ul></div>
+  <div class="big">Boulders</div>
+  <div class="bar"><span>© 2026 Boulders</span><span>Danmarks bouldering netværk</span></div>
+</footer>
+
+<script>
+const S="https://storage.googleapis.com/boulderscss/small/";
+const halls=[["Sydhavn","København","sydhavn-1200-x-628.webp"],["Valby","København","Valby%20Boulders.webp"],["Amager","København","amager%20gym.webp"],["Vanløse","København","IMG_3064-HDR.webp"],["Hvidovre","København","boulders%20hvidovre.webp"],["City","Aarhus","city-graven.webp"],["Nord","Aarhus","aarhus%20nord.webp"],["Syd","Aarhus","boulders%20aarhus%20syd.webp"],["Aaby","Aarhus","Aaby%20Boulders%20Top%20(1).webp"],["Odense","Fyn","boulders%20odense.webp"],["Aalborg","Nordjylland","Boulders%20Aalborg.webp"]];
+const rail=document.getElementById('rail');
+rail.innerHTML=halls.map((h,i)=>`<a class="hall" href="https://boulders.dk"><img src="${S+h[2]}" alt="Boulders ${h[0]}" loading="lazy"><span class="pill glass idx">${String(i+1).padStart(2,'0')} / 11</span><div class="lab glass"><div><b>${h[0]}</b><small>${h[1]}</small></div><span class="go">→</span></div></a>`).join('');
+// rail drag + buttons + progress
+let down=false,sx0=0,sl0=0,moved=false;
+rail.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;moved=false;sx0=e.clientX;sl0=rail.scrollLeft;rail.classList.add('drag')});
+addEventListener('pointermove',e=>{if(!down)return;const d=e.clientX-sx0;if(Math.abs(d)>4)moved=true;rail.scrollLeft=sl0-d});
+addEventListener('pointerup',()=>{down=false;rail.classList.remove('drag')});
+rail.addEventListener('click',e=>{if(moved){e.preventDefault();moved=false}},true);
+const step=()=>rail.querySelector('.hall').offsetWidth+16;
+document.getElementById('prev').onclick=()=>rail.scrollBy({left:-step(),behavior:'smooth'});
+document.getElementById('next').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
+const prog=document.getElementById('prog');
+rail.addEventListener('scroll',()=>{const p=rail.scrollLeft/(rail.scrollWidth-rail.clientWidth||1);prog.style.width=(15+p*85)+'%'},{passive:true});
+
+// dot wave — a twisting ribbon of particles, pushed by the cursor
+function wave(cv,o){
+  const ctx=cv.getContext('2d'),host=cv.parentElement;let W,H,P=[],dust=[],vis=true,mx=-1e4,my=-1e4,sm=0;
+  const rnd=()=>{let s=0;for(let i=0;i<3;i++)s+=Math.random();return s/1.5-1}; // ~gaussian in [-1,1]
+  function size(){const d=Math.min(devicePixelRatio||1,1.5);W=host.clientWidth;H=host.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
+    const n=Math.min(42000,Math.round(W*H/(innerWidth<700?40:30)));P=new Float32Array(n*4);
+    for(let i=0;i<n;i++){P[i*4]=Math.random();P[i*4+1]=rnd();P[i*4+2]=Math.random();P[i*4+3]=Math.random()}
+    dust=Array.from({length:Math.round(W*H/2600)},()=>[Math.random()*W,Math.random()*H,Math.random()])}
+  size();addEventListener('resize',size);
+  host.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top});
+  host.addEventListener('pointerleave',()=>{mx=my=-1e4});
+  new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
+  const B=[[],[],[],[],[]],AL=[.08,.16,.28,.45,.75],G=document.createElement('canvas'),g=G.getContext('2d');
+  function frame(t){requestAnimationFrame(frame);if(!vis)return;t=t/1000*(o.speed||1)+(o.seed||0);
+    ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,W,H);
+    for(const d of dust){ctx.fillStyle=`rgba(255,255,255,${.06+.1*Math.abs(Math.sin(t*.8+d[2]*20))})`;ctx.fillRect(d[0],d[1],1,1)}
+    ctx.globalCompositeOperation='lighter';for(const b of B)b.length=0;
+    const R=150,R2=R*R,n=P.length/4,cy0=H*o.y,amp=H*(o.amp||.13),mobile=W<700;
+    for(let i=0;i<n;i++){const u=P[i*4],v=P[i*4+1],j=P[i*4+2],k=P[i*4+3];
+      let x=(u*1.3-.15)*W;
+      const c=cy0+amp*Math.sin(u*3.1+t*.32)+amp*.45*Math.sin(u*7.3-t*.47+1.3);
+      const w=H*(.07+.2*Math.pow(.5+.5*Math.sin(u*2.6-t*.27+o.ph),1.5));
+      const a=u*4.6+t*.22+o.ph,z=Math.sin(a)*v;
+      let y=c+v*w*Math.cos(a)+(j-.5)*6;x+=(k-.5)*6;
+      const dx=x-mx,dy=y-my,d2=dx*dx+dy*dy;
+      if(d2<R2){const f=(1-Math.sqrt(d2)/R);x+=dx*f*f*.9;y+=dy*f*f*.9}
+      let l=(.55+.45*z)*(1-Math.abs(v)*.55)+ (1-Math.abs(Math.cos(a)))*.35;
+      l=l*(.6+.4*Math.sin(u*40+t*1.4+j*6)*.5+.2);
+      const q=Math.max(0,Math.min(4,Math.floor(l*5)));B[q].push(x,y)}
+    for(let q=0;q<5;q++){ctx.fillStyle=`rgba(255,255,255,${AL[q]})`;const b=B[q],s=q>3?1.6:1.15;for(let i=0;i<b.length;i+=2)ctx.fillRect(b[i],b[i+1],s,s)}
+    // cheap bloom: downsample + upscale back on top
+    G.width=W/6|0;G.height=H/6|0;g.drawImage(cv,0,0,G.width,G.height);ctx.globalAlpha=.55;ctx.imageSmoothingQuality='high';ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(G,0,0,cv.width,cv.height);ctx.restore();ctx.globalAlpha=1}
+  requestAnimationFrame(frame)}
+wave(document.getElementById('wave'),{y:.3,ph:0,amp:.12});
+wave(document.getElementById('wave2'),{y:.5,ph:2.1,amp:.1,seed:40,speed:.8});
+
+// card dot-glow follows cursor
+document.querySelectorAll('.fcard').forEach(c=>c.addEventListener('pointermove',e=>{const r=c.getBoundingClientRect();c.style.setProperty('--cx',e.clientX-r.left+'px');c.style.setProperty('--cy',e.clientY-r.top+'px')}));
+// halftone dots over every photo, fade away on hover
+document.querySelectorAll('.pc,.hall,.film,.u').forEach(el=>{const h=document.createElement('i');h.className='halftone';el.appendChild(h)});
+// tap hotspots on touch
+[].forEach(s=>s.addEventListener('click',()=>{document.querySelectorAll('.spot.on').forEach(o=>o!==s&&o.classList.remove('on'));s.classList.toggle('on')}));
+
+// UGC videos play on hover / when visible on touch
+document.querySelectorAll('.u video').forEach(v=>{const u=v.parentElement;u.addEventListener('pointerenter',()=>v.play().catch(()=>{}));u.addEventListener('pointerleave',()=>v.pause())});
+
+// statement words
+const st=document.getElementById('stmt');
+st.innerHTML=st.innerHTML.replace(/(<em>.*?<\/em>)|([^\s<]+)/g,m=>`<span class="w">${m}</span>`);
+const words=[...st.querySelectorAll('.w')];
+addEventListener('scroll',()=>{const r=st.getBoundingClientRect(),p=(innerHeight*.8-r.top)/(r.height+innerHeight*.25);words.forEach((w,i)=>w.classList.toggle('on',i/words.length<p))},{passive:true});
+
+// reveal + counters
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;e.target.classList.add('in');
+  e.target.querySelectorAll('[data-count]').forEach(el=>{const to=+el.dataset.count,t0=performance.now();
+    const f=n=>{const p=Math.min((n-t0)/1800,1);el.textContent=Math.round(to*(1-Math.pow(1-p,4)));if(p<1)requestAnimationFrame(f)};requestAnimationFrame(f)});
+  io.unobserve(e.target)}),{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+// touch devices: bring photos to colour and play videos while centred on screen
+if(matchMedia('(hover:none),(max-width:980px)').matches){
+  const lo=new IntersectionObserver(es=>es.forEach(e=>{e.target.classList.toggle('live',e.isIntersecting);const v=e.target.querySelector('video');if(v&&e.target.classList.contains('u'))e.isIntersecting?v.play().catch(()=>{}):v.pause()}),{rootMargin:'-30% 0px -30% 0px'});
+  document.querySelectorAll('.pc,.hall,.film,.u').forEach(el=>lo.observe(el));
+}
+</script>
+<div id="holds"></div>
+<script>
+// high-quality SVG climbing holds, spread far apart down the page, drifting with scroll
+(()=>{
+const SH={ // [path, bolt x, bolt y]
+ jug:['M30 120C14 92 22 52 58 36 98 18 150 22 178 46 202 66 200 98 184 118 172 134 150 132 140 118 128 100 104 94 86 104 70 114 64 138 48 140 38 142 34 130 30 120Z',112,64],
+ crimp:['M16 92C10 74 22 62 46 56L160 34C184 30 200 40 202 56 204 72 192 82 172 86L56 108C34 112 20 106 16 92Z',110,66],
+ sloper:['M14 118C8 76 44 30 104 24 160 18 202 52 204 96 206 124 186 136 150 138L54 140C30 140 16 132 14 118Z',108,86],
+ pinch:['M70 18C98 8 120 22 124 50L134 150C136 176 120 194 98 194 76 194 62 178 60 152L50 56C48 36 56 24 70 18Z',92,100],
+ volume:['M10 150 96 14 206 128Z',112,98],
+ pocket:['M24 100C14 58 52 18 108 18 166 18 200 56 196 98 192 140 152 166 106 164 60 162 32 140 24 100Z',108,64]};
+const g=(id,t)=>{const [d,bx,by]=SH[t];return `<svg viewBox="0 0 220 210" xmlns="http://www.w3.org/2000/svg">
+<defs>
+ <radialGradient id="b${id}" cx="35%" cy="25%" r="85%"><stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#d4d4d4"/><stop offset="1" stop-color="#4a4a4a"/></radialGradient>
+ <linearGradient id="r${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/></linearGradient>
+ <radialGradient id="o${id}" cx="50%" cy="100%" r="80%"><stop offset="0" stop-color="#000" stop-opacity=".7"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+ <filter id="n${id}"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="${id}"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.55"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+ <clipPath id="c${id}"><path d="${d}"/></clipPath>
+</defs>
+<path d="${d}" fill="url(#b${id})"/>
+<g clip-path="url(#c${id})">
+ <rect width="220" height="210" fill="url(#o${id})"/>
+ <rect width="220" height="210" filter="url(#n${id})" opacity=".55"/>
+ <path d="${d}" fill="none" stroke="url(#r${id})" stroke-width="6" transform="translate(0 3)"/>
+</g>
+<path d="${d}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/>
+<circle cx="${bx}" cy="${by}" r="11" fill="#0a0a0a"/><circle cx="${bx}" cy="${by}" r="11" fill="none" stroke="#bbb" stroke-width="2.5"/>
+<circle cx="${bx}" cy="${by}" r="5.5" fill="#2a2a2a"/><path d="M${bx-3} ${by}h6M${bx} ${by-3}v6" stroke="#666" stroke-width="1.4"/>
+</svg>`};
+// [type, page %, side x (vw, may be off-edge), size px, rotation, parallax speed]
+const L=[['jug',7,-3,230,-18,.25],['crimp',18,84,190,24,.4],['pinch',30,-4,150,-30,.18],['sloper',41,82,260,12,.32],
+ ['volume',53,-6,240,8,.22],['pocket',64,85,180,-14,.38],['crimp',75,-3,170,160,.28],['jug',86,83,210,200,.2]];
+const box=document.getElementById('holds');
+// extra holds centred in the black gaps between sections: [section selector, x vw, size, rotation, type]
+const M=[['#features',58,130,-22,'pocket'],['#intro',62,150,18,'crimp'],['#haller',48,140,-35,'pinch'],['#community',60,170,10,'sloper'],['.final',40,130,-12,'jug']];
+const mid=M.map(m=>document.querySelector(m[0]));
+M.forEach(m=>L.push([m[4],0,m[1],m[2],m[3],0]));
+box.innerHTML=L.map((h,i)=>`<div class="hold" data-i="${i}" style="--s:${h[3]}px;left:${h[2]}vw">${g(i+1,h[0])}</div>`).join('');
+const els=[...box.children];
+function place(){const H=document.documentElement.scrollHeight;box.style.height=H+'px';els.forEach((el,i)=>{const k=i-(L.length-M.length);el.style.top=(k>=0&&mid[k]?mid[k].offsetTop-(mid[k].id==='features'?40:0)-L[i][3]*.45:L[i][1]/100*H)+'px';el.style.transform=`rotate(${L[i][4]}deg)`})}
+place();addEventListener('resize',place);addEventListener('load',place);
+})();
+</script>
+<canvas id="dust" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:250"></canvas>
+<script>
+// desktop only: the cursor sheds a trail of glowing dust that drifts, curls and fades
+if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+  const c=document.getElementById('dust'),x=c.getContext('2d');let W,H,d=Math.min(devicePixelRatio||1,2),P=[],lx=null,ly=null,t=0;
+  const rs=()=>{W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)};rs();addEventListener('resize',rs);
+  addEventListener('pointermove',e=>{const X=e.clientX,Y=e.clientY;if(lx===null){lx=X;ly=Y}
+    const dx=X-lx,dy=Y-ly,dist=Math.hypot(dx,dy),n=Math.min(14,1+dist/4|0);
+    for(let i=0;i<n;i++){const f=i/n,a=Math.random()*6.283,sp=Math.random()*.6+.1*Math.min(dist,40)/10;
+      P.push({x:lx+dx*f+(Math.random()-.5)*6,y:ly+dy*f+(Math.random()-.5)*6,vx:Math.cos(a)*sp+dx*.02,vy:Math.sin(a)*sp+dy*.02,l:1,dl:.008+Math.random()*.014,r:Math.random()<.12?1.8:Math.random()*1.1+.4,s:Math.random()*100})}
+    if(P.length>1400)P.splice(0,P.length-1400);lx=X;ly=Y},{passive:true});
+  addEventListener('pointerleave',()=>{lx=null});
+  (function f(){requestAnimationFrame(f);t+=.016;x.clearRect(0,0,W,H);if(!P.length)return;x.globalCompositeOperation='lighter';
+    for(let i=P.length-1;i>=0;i--){const p=P[i];
+      // curl-ish drift so the dust swirls like ink in water
+      const ang=Math.sin(p.x*.012+t)*Math.cos(p.y*.012-t*.7)*3.1+p.s;
+      p.vx=p.vx*.95+Math.cos(ang)*.05;p.vy=p.vy*.95+Math.sin(ang)*.05-.012;
+      p.x+=p.vx;p.y+=p.vy;p.l-=p.dl;if(p.l<=0){P.splice(i,1);continue}
+      const a=p.l*p.l;x.fillStyle=`rgba(255,255,255,${a*.85})`;x.fillRect(p.x,p.y,p.r,p.r);
+      if(p.r>1.5){x.fillStyle=`rgba(255,255,255,${a*.12})`;x.beginPath();x.arc(p.x+.9,p.y+.9,5,0,6.283);x.fill()}}
+    x.globalCompositeOperation='source-over'})();
+}
+</script>
+</body>
+</html>
