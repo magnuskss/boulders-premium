@@ -551,7 +551,65 @@ function climb(cv,opt={}){
  requestAnimationFrame(frame)}
 climb(document.getElementById('wave'));
 
-climb(document.getElementById('wave2'),{rnd:1,logo:1});
+// bottom: a tiny dot climber holds a pen and draws BOULDERS; the line trails behind him at a steady pace
+function drawer(cv){
+ const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W,H,S,holds,path,len,c,vis=true;
+ // single-stroke letters in a 1 x 1 box (y down)
+ const L={B:[[[0,0],[0,1]],[[0,0],[.55,0],[.72,.1],[.72,.36],[.55,.47],[0,.47]],[[.55,.47],[.78,.58],[.8,.86],[.62,1],[0,1]]],
+  O:[Array.from({length:29},(_,i)=>{const a=-Math.PI/2-i/28*Math.PI*2;return[.42+Math.cos(a)*.42,.5+Math.sin(a)*.5]})],
+  U:[[[0,0],[0,.72],[.12,.93],[.4,1],[.68,.93],[.8,.72],[.8,0]]],L:[[[0,0],[0,1],[.68,1]]],
+  D:[[[0,0],[0,1]],[[0,0],[.4,0],[.7,.15],[.82,.5],[.7,.85],[.4,1],[0,1]]],E:[[[.72,0],[0,0],[0,1],[.72,1]],[[0,.5],[.58,.5]]],
+  R:[[[0,1],[0,0],[.52,0],[.72,.11],[.72,.37],[.52,.48],[0,.48]],[[.38,.48],[.78,1]]],
+  S:[[[.74,.12],[.55,0],[.2,0],[.03,.12],[.04,.33],[.3,.47],[.6,.55],[.79,.69],[.78,.9],[.55,1],[.2,1],[0,.88]]]};
+ const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(11);
+ function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);S=W<700?.75:1;
+  const word='BOULDERS',adv=1.18,tw=Math.min(W*.86,980),h=tw/(word.length*adv-.38),X0=(W-tw)/2,Y0=H*(W<700?.76:.72);
+  // resample every stroke to ~2px steps; pen-up moves are flagged so no line is drawn there
+  path=[];[...word].forEach((ch,li)=>L[ch].forEach(st=>{for(let i=0;i<st.length;i++){const p=[X0+(li*adv+st[i][0])*h,Y0+st[i][1]*h];
+   if(i===0){path.push({x:p[0],y:p[1],up:1});continue}const q=path[path.length-1],n=Math.max(1,Math.hypot(p[0]-q.x,p[1]-q.y)/2|0);
+   for(let k=1;k<=n;k++)path.push({x:q.x+(p[0]-q.x)*k/n,y:q.y+(p[1]-q.y)*k/n})}}));
+  // cumulative distance along the path
+  len=0;path.forEach((p,i)=>{if(i)len+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);p.s=len});
+  // dotted holds scattered around the word band
+  holds=[];let k=0;while(holds.length<(W<700?120:220)&&k++<6000){const hh={x:X0-30+rnd()*(tw+60),y:Y0-h*.8+rnd()*h*2.8,r:(2.5+rnd()*2.5)*S,d:[]};
+   if(holds.every(o=>Math.hypot(o.x-hh.x,o.y-hh.y)>20*S)){for(let i=0;i<9;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*hh.r;hh.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(hh)}}
+  const p0=path[0];c={s:0,fin:0,bx:p0.x-8*S,by:p0.y+20*S,l:[0,1,2,3].map(()=>({h:-1,x:p0.x,y:p0.y+20*S,fx:0,fy:0,t:1}))};
+  [0,2,3].forEach(k=>grab(k,true))}
+ const OFF=[[-14,-20],[12,-22],[-10,24],[10,24]];
+ function grab(k,now){const l=c.l[k],ix=c.bx+OFF[k][0]*S,iy=c.by+OFF[k][1]*S;let bi=-1,bd=1e9;
+  holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
+  if(bi<0)return;l.fx=l.x;l.fy=l.y;l.h=bi;if(now){l.x=holds[bi].x;l.y=holds[bi].y;l.t=1}else l.t=0}
+ const at=s=>{let lo=0,hi=path.length-1;while(lo<hi){const m=lo+hi>>1;path[m].s<s?lo=m+1:hi=m}return lo};
+ init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
+ new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
+ const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
+ const limb=(sx,sy,ex,ey,bend)=>{const L2=Math.hypot(ex-sx,ey-sy),k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
+ let last=0;function frame(t){requestAnimationFrame(frame);if(!vis){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
+  // pen moves at a steady speed; faster through pen-up jumps
+  if(c.s<len){const i=at(c.s),up=path[Math.min(path.length-1,i+1)].up;c.s=Math.min(len,c.s+(up?260:85)*S*dt)}
+  else if(!c.fin)c.fin=t+3200;else if(t>c.fin){c.s=0;c.fin=0}
+  const pi=at(c.s),pen=path[pi];
+  // body hangs just below-left of the pen hand
+  c.bx+=(pen.x-8*S-c.bx)*Math.min(1,dt*6);c.by+=(pen.y+20*S-c.by)*Math.min(1,dt*6);
+  // the other three limbs step to fresh holds when they get stretched, one at a time
+  if(c.l.every(l=>l.t>=1))for(const k of [0,2,3]){const l=c.l[k];if(Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))>22*S){grab(k);break}}
+  c.l.forEach((l,k)=>{if(k===1)return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.2);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*6*S}else{l.x=h.x;l.y=h.y}});
+  c.l[1].x=pen.x;c.l[1].y=pen.y;
+  x.clearRect(0,0,W,H);
+  holds.forEach((h,i)=>{x.fillStyle=c.l.some(l=>l.h===i)?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
+  // the drawn line, trailing behind the pen
+  const fo=c.fin?Math.max(0,Math.min(1,(c.fin-t)/700)):1;x.save();x.strokeStyle=`rgba(255,255,255,${.95*fo})`;x.lineWidth=2*S;x.lineCap=x.lineJoin='round';x.shadowColor='rgba(255,255,255,.8)';x.shadowBlur=10;
+  x.beginPath();for(let i=0;i<=pi;i++){const p=path[i];p.up?x.moveTo(p.x,p.y):x.lineTo(p.x,p.y)}x.stroke();x.restore();
+  // climber
+  x.fillStyle='#fff';const sh={x:c.bx,y:c.by-9*S},hip={x:c.bx,y:c.by+9*S};dots(sh.x,sh.y,hip.x,hip.y,9);
+  for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
+  limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,pen.x,pen.y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
+  // the pen: a short stick in his hand with a bright tip on the line
+  const ang=Math.atan2(pen.y-sh.y,pen.x-sh.x);x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=1.4*S;x.beginPath();x.moveTo(pen.x-Math.cos(ang-.5)*10*S,pen.y-Math.sin(ang-.5)*10*S);x.lineTo(pen.x,pen.y);x.stroke();
+  x.fillStyle='#fff';x.shadowColor='#fff';x.shadowBlur=12;x.beginPath();x.arc(pen.x,pen.y,1.8*S,0,6.283);x.fill();x.shadowBlur=0}
+ requestAnimationFrame(frame)}
+drawer(document.getElementById('wave2'));
+
 
 
 // card dot-glow follows cursor
