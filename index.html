@@ -242,7 +242,7 @@ section,footer{z-index:1}
 footer{padding:70px 4vw 30px;border-top:1px solid var(--line);display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px;color:var(--mute);font-size:14px}
 footer h5{color:var(--ink);font-weight:500;font-size:13px;margin-bottom:14px}
 footer li{list-style:none;margin:8px 0}footer a:hover{color:var(--ink)}
-footer .big{grid-column:1/-1;margin-top:40px;text-align:center;opacity:.92}footer .big img{width:min(60%,640px);height:auto;display:block;margin:0 auto}
+footer .big{grid-column:1/-1;margin:30px -4vw 0;position:relative;height:clamp(150px,20vw,320px)}
 footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-size:12px;border-top:1px solid var(--line);padding-top:18px}
 
 .reveal{opacity:0;transform:translateY(40px);transition:opacity 1.2s var(--ease),transform 1.2s var(--ease)}
@@ -405,7 +405,6 @@ footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-siz
 </section>
 
 <section class="final">
-  <canvas class="wave" id="wave2"></canvas>
   <div class="eyebrow reveal">Klar til at sende?</div>
   <h2 class="reveal" style="margin-top:22px">Dit andet<br>hjem venter.</h2>
   <div class="acts reveal"><a class="btn" href="https://boulders.dk">Bliv medlem <span class="ar">→</span></a><a class="btn ghost glass" href="#intro">Prøv for 99 kr</a></div>
@@ -416,7 +415,7 @@ footer .bar{grid-column:1/-1;display:flex;justify-content:space-between;font-siz
   <div><h5>Klatring</h5><ul><li><a href="#">Medlemskab</a></li><li><a href="#">Priser</a></li><li><a href="#intro">Introhold</a></li></ul></div>
   <div><h5>Haller</h5><ul><li><a href="#haller">København</a></li><li><a href="#haller">Aarhus</a></li><li><a href="#haller">Aalborg</a></li><li><a href="#haller">Odense</a></li></ul></div>
   <div><h5>Følg</h5><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">Kontakt</a></li></ul></div>
-  <div class="big"><img src="https://images.squarespace-cdn.com/content/v1/59147685ebbd1a46db5e4cfb/8bbd773b-7a6a-4b92-aaa3-68d6f99afa16/White_horizontal.png?format=2500w" alt="Boulders"></div>
+  <div class="big"><canvas class="wave" id="wave2" aria-label="Boulders"></canvas></div>
   <div class="bar"><span>© 2026 Boulders</span><span>Danmarks bouldering netværk</span></div>
 </footer>
 
@@ -564,11 +563,11 @@ function drawer(cv){
   R:[[[0,1],[0,0],[.52,0],[.72,.11],[.72,.37],[.52,.48],[0,.48]],[[.38,.48],[.78,1]]],
   S:[[[.74,.12],[.55,0],[.2,0],[.03,.12],[.04,.33],[.3,.47],[.6,.55],[.79,.69],[.78,.9],[.55,1],[.2,1],[0,.88]]]};
  const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(11);
- function init(re){if(!re)cv.parentElement.style.paddingBottom='';W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+ function init(re){if(!re)cv.parentElement.style.height='';W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
   // fit the word into the free space under the buttons, at any screen size
-  const cr=cv.getBoundingClientRect(),ac=cv.parentElement.querySelector('.acts'),top=ac?ac.getBoundingClientRect().bottom-cr.top+30:H*.6;
+  const cr=cv.getBoundingClientRect(),ac=cv.parentElement.querySelector('.acts'),top=ac?ac.getBoundingClientRect().bottom-cr.top+30:10;
   const word='BOULDERS',adv=1.18,k8=word.length*adv-.38;let h=W*.96/k8;
-  S=Math.max(.6,Math.min(1.15,.5+h/200));let room=H-top-14;const need=h*1.35+62*S-room;if(need>1){const f=cv.parentElement;f.style.paddingBottom=(parseFloat(getComputedStyle(f).paddingBottom)+need+10)+'px';return requestAnimationFrame(()=>init(1))}S=Math.max(.6,Math.min(1.15,.5+h/200));
+  S=Math.max(.6,Math.min(1.15,.5+h/200));let room=H-top-14;const need=h*1.35+62*S-room;if(need>1){const f=cv.parentElement;f.style.height=(f.offsetHeight+need+10)+'px';return requestAnimationFrame(()=>init(1))}S=Math.max(.6,Math.min(1.15,.5+h/200));
   const tw=h*k8,X0=(W-tw)/2,Y0=Math.max(top+h*.3,top+(room-h-62*S)/2+h*.3);
   // resample every stroke to ~2px steps; pen-up moves are flagged so no line is drawn there
   path=[];[...word].forEach((ch,li)=>L[ch].forEach(st=>{for(let i=0;i<st.length;i++){const p=[X0+(li*adv+st[i][0])*h,Y0+st[i][1]*h];
@@ -708,29 +707,7 @@ let uid=900;box.addEventListener('click',e=>{const h=e.target.closest('.hold');i
 place();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(place,200)});addEventListener('load',place);setTimeout(place,1500);
 })();
 </script>
-<canvas id="dust" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:250"></canvas>
-<script>
-// desktop only: the cursor sheds a trail of glowing dust that drifts, curls and fades
-if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
-  const c=document.getElementById('dust'),x=c.getContext('2d');let W,H,d=Math.min(devicePixelRatio||1,2),P=[],lx=null,ly=null,t=0;
-  const rs=()=>{W=innerWidth;H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0)};rs();addEventListener('resize',rs);
-  addEventListener('pointermove',e=>{const X=e.clientX,Y=e.clientY;if(lx===null){lx=X;ly=Y}
-    const dx=X-lx,dy=Y-ly,dist=Math.hypot(dx,dy),n=Math.min(14,1+dist/4|0);
-    for(let i=0;i<n;i++){const f=i/n,a=Math.random()*6.283,sp=Math.random()*.6+.1*Math.min(dist,40)/10;
-      P.push({x:lx+dx*f+(Math.random()-.5)*6,y:ly+dy*f+(Math.random()-.5)*6,vx:Math.cos(a)*sp+dx*.02,vy:Math.sin(a)*sp+dy*.02,l:1,dl:.008+Math.random()*.014,r:Math.random()<.12?1.8:Math.random()*1.1+.4,s:Math.random()*100})}
-    if(P.length>1400)P.splice(0,P.length-1400);lx=X;ly=Y},{passive:true});
-  addEventListener('pointerleave',()=>{lx=null});
-  (function f(){requestAnimationFrame(f);t+=.016;x.clearRect(0,0,W,H);if(!P.length)return;x.globalCompositeOperation='lighter';
-    for(let i=P.length-1;i>=0;i--){const p=P[i];
-      // curl-ish drift so the dust swirls like ink in water
-      const ang=Math.sin(p.x*.012+t)*Math.cos(p.y*.012-t*.7)*3.1+p.s;
-      p.vx=p.vx*.95+Math.cos(ang)*.05;p.vy=p.vy*.95+Math.sin(ang)*.05-.012;
-      p.x+=p.vx;p.y+=p.vy;p.l-=p.dl;if(p.l<=0){P.splice(i,1);continue}
-      const a=p.l*p.l;x.fillStyle=`rgba(255,255,255,${a*.32})`;x.fillRect(p.x,p.y,p.r,p.r);
-      if(p.r>1.5){x.fillStyle=`rgba(255,255,255,${a*.12})`;x.beginPath();x.arc(p.x+.9,p.y+.9,5,0,6.283);x.fill()}}
-    x.globalCompositeOperation='source-over'})();
-}
-</script>
+
 <script>
 // cursor ink: a glowing dotted ink blot that spreads behind the cursor and slowly fades
 (()=>{if(!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
