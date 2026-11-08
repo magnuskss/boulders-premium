@@ -219,12 +219,16 @@ h2 em{color:#9c9c9c}
 .final .acts{display:flex;gap:10px;margin-top:40px;flex-wrap:wrap;justify-content:center}
 
 /* floating holds */
-#holds{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:0;overflow:hidden}
+#holds{position:absolute;left:0;top:0;width:100%;pointer-events:none;z-index:3;overflow:hidden}
 section,footer{z-index:1}
-.hold{position:absolute;width:var(--s);pointer-events:auto;will-change:transform;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 22px var(--c)) drop-shadow(0 0 60px color-mix(in srgb,var(--c) 55%,transparent))}
+.hold{position:absolute;width:var(--s);pointer-events:auto;cursor:pointer;transform:perspective(600px) rotate(var(--r)) rotateY(var(--tx,0deg)) rotateX(var(--ty,0deg));transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s;filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 22px var(--c)) drop-shadow(0 0 60px color-mix(in srgb,var(--c) 55%,transparent))}
 .hold svg{width:100%;height:auto;display:block;transition:transform 1s var(--ease)}
 .hold:hover svg{transform:rotate(-8deg) scale(1.06)}
-@media (max-width:980px){.hold{width:calc(var(--s)*.42)}.hold:nth-child(odd){margin-left:-6vw}.hold:nth-child(even){margin-left:4vw}}
+.hold:hover{transform:perspective(600px) rotate(var(--r)) rotateY(var(--tx,0deg)) rotateX(var(--ty,0deg)) scale(1.12);filter:drop-shadow(0 30px 40px rgba(0,0,0,.8)) drop-shadow(0 0 30px var(--c)) drop-shadow(0 0 90px var(--c)) brightness(1.2)}
+.hold.pop{animation:pop .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes pop{0%{transform:rotate(var(--r)) scale(1)}35%{transform:rotate(calc(var(--r) + 200deg)) scale(1.3)}100%{transform:rotate(calc(var(--r) + 360deg)) scale(1)}}
+.spark{position:absolute;z-index:260;width:5px;height:5px;border-radius:50%;pointer-events:none;animation:spark .8s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 /* touch: colour + play when in view, header backdrop */
 @media (hover:none),(max-width:980px){
   header.top::before{content:"";position:fixed;left:0;right:0;top:0;height:96px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(5,5,5,.92),rgba(5,5,5,.6) 60%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
@@ -525,20 +529,22 @@ const g=(id,t)=>{const [d,bx,by]=SH[t];const [nc,nd]=NEON[id%NEON.length];return
 <circle cx="${bx}" cy="${by}" r="5.5" fill="#2a2a2a"/><path d="M${bx-3} ${by}h6M${bx} ${by-3}v6" stroke="#666" stroke-width="1.4"/>
 </svg>`};
 // [type, page %, side x (vw, may be off-edge), size px, rotation, parallax speed]
-const L=[['jug',7,-3,230,-18,.25],['crimp',18,84,190,24,.4],['pinch',30,-4,150,-30,.18],['sloper',41,82,260,12,.32],
- ['volume',53,-6,240,8,.22],['pocket',64,85,180,-14,.38],['crimp',75,-3,170,160,.28],['jug',86,83,210,200,.2]];
-const box=document.getElementById('holds');
-// extra holds centred in the black gaps between sections: [section selector, x vw, size, rotation, type]
-const M=[['#features',58,130,-22,'pocket'],['#intro',62,150,18,'crimp'],['#haller',48,140,-35,'pinch'],['#community',60,170,10,'sloper'],['.final',40,130,-12,'jug']];
-const mid=M.map(m=>document.querySelector(m[0]));
-M.forEach(m=>L.push([m[4],0,m[1],m[2],m[3],0]));
-box.innerHTML=L.map((h,i)=>`<div class="hold" data-i="${i}" style="--s:${h[3]}px;--c:${NEON[(i+1)%NEON.length][0]};left:${h[2]}vw">${g(i+1,h[0])}</div>`).join('');
-const els=[...box.children];
-function place(){const H=document.documentElement.scrollHeight;box.style.height=H+'px';els.forEach((el,i)=>{const k=i-(L.length-M.length);el.style.top=(k>=0&&mid[k]?mid[k].offsetTop-(mid[k].id==='features'?40:0)-L[i][3]*.45:L[i][1]/100*H)+'px';el.style.transform=`rotate(${L[i][4]}deg)`});hide()}
-// only keep holds that sit fully on black: drop any that touch a photo, card, video or text
-function hide(){const sy=scrollY,R=[...document.querySelectorAll('img,video,canvas.wave,.pc,.hall,.film,.u,.offer,.glass,h1,h2,h3,p,.btn,.feat,.rev,.counters,.strip')].map(e=>e.getBoundingClientRect()).filter(r=>r.width).map(r=>({l:r.left,r:r.right,t:r.top+sy,b:r.bottom+sy}));
- els.forEach(el=>{el.style.display='';const b=el.getBoundingClientRect(),h={l:b.left-30,r:b.right+30,t:b.top+sy-30,b:b.bottom+sy+30};el.style.display=R.some(r=>r.l<h.r&&r.r>h.l&&r.t<h.b&&r.b>h.t)?'none':''})}
-place();addEventListener('resize',place);addEventListener('load',place);
+const T=Object.keys(SH),box=document.getElementById('holds');let els=[];
+// scan the page for clear black space and drop a hold into every free spot (spaced out)
+function place(){const H=document.documentElement.scrollHeight,W=document.documentElement.clientWidth,sy=scrollY,mob=W<980;box.style.height=H+'px';
+ const R=[...document.querySelectorAll('img,video,canvas.wave,.pc,.hall,.film,.u,.offer,.glass,h1,h2,h3,p,.btn,.feat,.rev,.counters,.strip,.chip,header,footer,.rail,.stmt,form,ul,ol')].map(e=>e.getBoundingClientRect()).filter(r=>r.width&&r.height).map(r=>({l:r.left,r:r.right,t:r.top+sy,b:r.bottom+sy}));
+ const free=(x,y,z)=>!R.some(r=>r.l<x+z&&r.r>x-z&&r.t<y+z&&r.b>y-z),out=[];let n=0;
+ const step=mob?70:90,gap=mob?260:380;
+ for(let y=innerHeight;y<H-200;y+=step)for(let k=0;k<6;k++){const sz=mob?70+(n*37%40):110+(n*53%90),x=sz/2+((n*0.618+k*0.37)%1)*(W-sz);n++;const z=sz/2+20;
+  if(free(x,y,z)&&!out.some(o=>Math.hypot(o.x-x,o.y-y)<gap)){out.push({x,y,sz});break}}
+ box.innerHTML=out.map((o,i)=>`<div class="hold" style="--s:${o.sz}px;--c:${NEON[(i+1)%NEON.length][0]};left:${o.x-o.sz/2}px;top:${o.y-o.sz/2}px;--r:${(i*67%120)-60}deg">${g(i+1,T[i%T.length])}</div>`).join('');
+ els=[...box.children]}
+// interactive: holds tilt toward the cursor, glow on hover, and spin + burst when clicked/tapped
+box.addEventListener('pointermove',e=>{const h=e.target.closest('.hold');if(!h)return;const b=h.getBoundingClientRect();h.style.setProperty('--tx',((e.clientX-b.left)/b.width-.5)*24+'deg');h.style.setProperty('--ty',((e.clientY-b.top)/b.height-.5)*-24+'deg')});
+box.addEventListener('pointerout',e=>{const h=e.target.closest('.hold');if(h){h.style.setProperty('--tx','0deg');h.style.setProperty('--ty','0deg')}});
+box.addEventListener('click',e=>{const h=e.target.closest('.hold');if(!h)return;h.classList.remove('pop');void h.offsetWidth;h.classList.add('pop');
+ const b=h.getBoundingClientRect(),c=getComputedStyle(h).getPropertyValue('--c');for(let i=0;i<14;i++){const d=document.createElement('i');d.className='spark';d.style.cssText=`left:${b.left+b.width/2+scrollX}px;top:${b.top+b.height/2+scrollY}px;background:${c};box-shadow:0 0 10px ${c};--dx:${Math.cos(i/14*6.283)*(60+Math.random()*50)}px;--dy:${Math.sin(i/14*6.283)*(60+Math.random()*50)}px`;document.body.appendChild(d);setTimeout(()=>d.remove(),800)}});
+place();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(place,200)});addEventListener('load',place);setTimeout(place,1500);
 })();
 </script>
 <canvas id="dust" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:250"></canvas>
