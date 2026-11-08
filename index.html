@@ -724,7 +724,7 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers
       const ang=Math.sin(p.x*.012+t)*Math.cos(p.y*.012-t*.7)*3.1+p.s;
       p.vx=p.vx*.95+Math.cos(ang)*.05;p.vy=p.vy*.95+Math.sin(ang)*.05-.012;
       p.x+=p.vx;p.y+=p.vy;p.l-=p.dl;if(p.l<=0){P.splice(i,1);continue}
-      const a=p.l*p.l;x.fillStyle=`rgba(255,255,255,${a*.45})`;x.fillRect(p.x,p.y,p.r,p.r);
+      const a=p.l*p.l;x.fillStyle=`rgba(255,255,255,${a*.32})`;x.fillRect(p.x,p.y,p.r,p.r);
       if(p.r>1.5){x.fillStyle=`rgba(255,255,255,${a*.12})`;x.beginPath();x.arc(p.x+.9,p.y+.9,5,0,6.283);x.fill()}}
     x.globalCompositeOperation='source-over'})();
 }
@@ -745,8 +745,8 @@ if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers
    for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){const dx=c*G-sx,dy=r*G-sy,d=Math.hypot(dx,dy)/(R*(1+.35*n(c,r,t)));if(d<1){const i=r*cols+c;f[i]=Math.min(1,f[i]+(1-d)*(1-d)*.12)}}}
   x.clearRect(0,0,W,H);let any=0;
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const i=r*cols+c,v=f[i];if(v<.01){f[i]=0;continue}any=1;f[i]=v*.94;
-   const a=Math.min(1,v*1.4);x.fillStyle=`rgba(255,255,255,${a*.45})`;const z=.7+a*1.1;x.fillRect(c*G-z/2,r*G-z/2,z,z)}
-  if(on){const g=x.createRadialGradient(sx,sy,0,sx,sy,50);g.addColorStop(0,'rgba(255,255,255,.05)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(sx-50,sy-50,100,100)}}
+   const a=Math.min(1,v*1.4);x.fillStyle=`rgba(255,255,255,${a*.32})`;const z=.7+a*1.1;x.fillRect(c*G-z/2,r*G-z/2,z,z)}
+}
  requestAnimationFrame(frame)})();
 </script>
 </body>
