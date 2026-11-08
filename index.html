@@ -597,32 +597,37 @@ function drawer(cv){
  const limb=(sx,sy,ex,ey,bend,mx=1e9)=>{let L2=Math.hypot(ex-sx,ey-sy);if(L2>mx){ex=sx+(ex-sx)*mx/L2;ey=sy+(ey-sy)*mx/L2;L2=mx}const k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
  let last=0;function frame(t){requestAnimationFrame(frame);if(!vis||!c){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
   const pos=q=>{const k=at(q),B=path[k],A=path[Math.max(0,k-1)],f=B.s>A.s?(q-A.s)/(B.s-A.s):1;return{x:A.x+(B.x-A.x)*f,y:A.y+(B.y-A.y)*f}};
-  const ARM=32*S,sh0={x:c.bx,y:c.by-9*S},reach=P=>Math.hypot(P.x-sh0.x,P.y-sh0.y)<ARM&&P.y<sh0.y+3*S,L1=c.l[1];
+  const ARM=42*S,sh0={x:c.bx,y:c.by-9*S},reach=P=>Math.hypot(P.x-sh0.x,P.y-sh0.y)<ARM&&P.y<sh0.y+10*S,L1=c.l[1];
   let T=pos(c.s);const moving=c.l.some(l=>l.t<1&&holds[l.h]);
-  if(c.s>=len){if(!c.fin)c.fin=t+2500;else if(t>c.fin){c.s=0;c.fin=0;T=pos(0);c.mode='climb'}}
+  if(c.s>=len){if(!c.fin)c.fin=t+3800;else if(t>c.fin){c.s=0;c.fin=0;T=pos(0);c.mode='climb'}}
   if(c.mode==='draw'){
    if(Math.hypot(c.px-T.x,c.py-T.y)<1.5*S){if(c.s<len){const k=at(c.s+.01);
      if(path[k].up&&path[k].s>c.s){c.s=path[k].s;T=pos(c.s);c.mode='climb'}
      else{const ns=Math.min(len,c.s+230*S*dt*(path[at(c.s)].v||1)),N=pos(ns);if(reach(N)){c.s=ns;T=N;c.px=N.x;c.py=N.y}else c.mode='climb'}}}
-   else{const dx=T.x-c.px,dy=T.y-c.py,d=Math.hypot(dx,dy),m=Math.min(d,320*S*dt);c.px+=dx/d*m;c.py+=dy/d*m}
+   else{const dx=T.x-c.px,dy=T.y-c.py,d=Math.hypot(dx,dy),m=Math.max(Math.min(d,40*S*dt),d*Math.min(1,dt*7));c.px+=dx/d*m;c.py+=dy/d*m}
    L1.x=c.px;L1.y=c.py}
   if(c.mode!=='draw'){
    // climbing: body moves, all four limbs (pen hand too) step between holds
-   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,(moving?80:150)*S*dt);
+   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,bd*Math.min(1,dt*(moving?2.2:3.5)),130*S*dt);
    if(bd>.1){c.bx+=bdx/bd*bm;c.by+=bdy/bd*bm}
    if(L1.h<0&&!moving){L1.h=-2;grab(1)}
    if(!moving){let w=-1,wd=0;for(const k of [2,3,0,1]){const l=c.l[k],e=Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))-(k>1?10:14)*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}
-   if(bd<2*S&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1;c.px=L1.x;c.py=L1.y}
+   if(bd<3*S&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1;c.px=L1.x;c.py=L1.y}
    else{c.px=L1.x;c.py=L1.y}}
   const pi=at(c.s),P1=path[pi],pen={x:c.px,y:c.py},drawing=c.mode==='draw'&&Math.hypot(c.px-T.x,c.py-T.y)<1.5*S;
-  c.l.forEach((l,k)=>{if(k===1&&c.mode==='draw')return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.12);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*6*S}else{l.x=h.x;l.y=h.y}});
+  c.l.forEach((l,k)=>{if(k===1&&c.mode==='draw')return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.32);const e=.5-.5*Math.cos(Math.PI*l.t);l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*9*S}else{l.x=h.x;l.y=h.y}});
   x.clearRect(0,0,W,H);
   holds.forEach((h,i)=>{x.fillStyle=c.l.some(l=>l.h===i)?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
   // the drawn line, trailing behind the pen
   const fo=c.fin?Math.max(0,Math.min(1,(c.fin-t)/700)):1;x.save();x.strokeStyle=`rgba(255,255,255,${.95*fo})`;x.lineWidth=2*S;x.lineCap=x.lineJoin='round';x.shadowColor='rgba(255,255,255,.8)';x.shadowBlur=10;
   x.beginPath();for(let i=0;i<pi;i++){const p=path[i];p.up?x.moveTo(p.x,p.y):x.lineTo(p.x,p.y)}if(!P1.up&&drawing)x.lineTo(pen.x,pen.y);x.stroke();x.restore();
+  // celebration when the word is finished: pen hand pumps up, a little hop and a soft glow
+  let hop=0;if(c.fin){const ct=(t-(c.fin-3800))/1000;if(ct>.3&&ct<3.2){const k=Math.min(1,(ct-.3)/.4)*Math.min(1,(3.2-ct)/.4);
+   hop=-Math.abs(Math.sin((ct-.3)*5))*5*S*k;const sx=c.bx,sy=c.by-9*S+hop;
+   pen.x=pen.x+(sx+9*S-pen.x)*k;pen.y=pen.y+(sy-24*S-Math.sin(ct*9)*5*S-pen.y)*k;
+   const g=x.createRadialGradient(sx,sy,0,sx,sy,46*S);g.addColorStop(0,`rgba(255,255,255,${.16*k})`);g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(sx-46*S,sy-46*S,92*S,92*S)}}
   // climber
-  x.fillStyle='#fff';const sh={x:c.bx,y:c.by-9*S},hip={x:c.bx,y:c.by+9*S};dots(sh.x,sh.y,hip.x,hip.y,9);
+  x.fillStyle='#fff';const sh={x:c.bx,y:c.by-9*S+hop},hip={x:c.bx,y:c.by+9*S+hop};dots(sh.x,sh.y,hip.x,hip.y,9);
   for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
   limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,pen.x,pen.y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
   // the pen: a short stick in his hand with a bright tip on the line
