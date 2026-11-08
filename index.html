@@ -583,7 +583,7 @@ function drawer(cv){
  init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
  new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
  const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
- const limb=(sx,sy,ex,ey,bend,mx=1e9)=>{let L2=Math.hypot(ex-sx,ey-sy);if(L2>mx){ex=sx+(ex-sx)*mx/L2;ey=sy+(ey-sy)*mx/L2;L2=mx},k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
+ const limb=(sx,sy,ex,ey,bend,mx=1e9)=>{let L2=Math.hypot(ex-sx,ey-sy);if(L2>mx){ex=sx+(ex-sx)*mx/L2;ey=sy+(ey-sy)*mx/L2;L2=mx}const k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
  let last=0;function frame(t){requestAnimationFrame(frame);if(!vis){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
   // pen moves at a steady speed; faster through pen-up jumps
   if(c.s<len){const i=at(c.s),up=path[Math.min(path.length-1,i+1)].up;c.s=Math.min(len,c.s+(up?55:85)*S*dt)}
