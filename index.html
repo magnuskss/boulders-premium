@@ -582,8 +582,8 @@ function drawer(cv){
   // cumulative distance along the path
   len=0;path.forEach((p,i)=>{if(i)len+=Math.hypot(p.x-path[i-1].x,p.y-path[i-1].y);p.s=len});
   // dotted holds scattered around the word band
-  const hy0=Math.max(4,Y0-h*.3-24*S),hy1=Math.min(H-6,Y0+h+60*S),na=Math.round((tw+60)*(hy1-hy0)/(380*S*S));holds=[];let k=0;while(holds.length<na&&k++<8000){const hh={x:X0-30+rnd()*(tw+60),y:hy0+rnd()*(hy1-hy0),r:(2.5+rnd()*2.5)*S,d:[]};
-   if(holds.every(o=>Math.hypot(o.x-hh.x,o.y-hh.y)>16*S)){for(let i=0;i<9;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*hh.r;hh.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(hh)}}
+  const hy0=Math.max(4,Y0-h*.3-24*S),hy1=Math.min(H-6,Y0+h+60*S),na=Math.round((tw+60)*(hy1-hy0)/(1100*S*S));holds=[];let k=0;while(holds.length<na&&k++<8000){const hh={x:X0-30+rnd()*(tw+60),y:hy0+rnd()*(hy1-hy0),r:(2.5+rnd()*2.5)*S,d:[]};
+   if(holds.every(o=>Math.hypot(o.x-hh.x,o.y-hh.y)>26*S)){for(let i=0;i<9;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*hh.r;hh.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(hh)}}
   const p0=path[0];c={s:0,fin:0,mode:'draw',px:p0.x,py:p0.y,bx:p0.x-10*S,by:p0.y+22*S,l:[0,1,2,3].map(()=>({h:-1,x:p0.x,y:p0.y+20*S,fx:0,fy:0,t:1}))};
   [0,2,3].forEach(k=>grab(k,true))}
  const OFF=[[-14,-20],[12,-22],[-10,24],[10,24]];
@@ -603,9 +603,11 @@ function drawer(cv){
   if(c.mode==='draw'){
    if(Math.hypot(c.px-T.x,c.py-T.y)<1.5*S){if(c.s<len){const k=at(c.s+.01);
      if(path[k].up&&path[k].s>c.s){c.s=path[k].s;T=pos(c.s);c.mode='climb'}
-     else{const ns=Math.min(len,c.s+230*S*dt*(path[at(c.s)].v||1)),N=pos(ns);if(reach(N)){c.s=ns;T=N;c.px=N.x;c.py=N.y}else c.mode='climb'}}}
+     else{const ns=Math.min(len,c.s+230*S*dt*(path[at(c.s)].v||1)),N=pos(ns);c.s=ns;T=N;c.px=N.x;c.py=N.y}}}
    else{const dx=T.x-c.px,dy=T.y-c.py,d=Math.hypot(dx,dy),m=Math.max(Math.min(d,40*S*dt),d*Math.min(1,dt*7));c.px+=dx/d*m;c.py+=dy/d*m}
-   L1.x=c.px;L1.y=c.py}
+   L1.x=c.px;L1.y=c.py;
+   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy);if(bd>.1){const bm=Math.min(bd,bd*Math.min(1,dt*3));c.bx+=bdx/bd*bm;c.by+=bdy/bd*bm}
+   if(!moving){let w=-1,wd=0;for(const k of [2,3,0]){const l=c.l[k],e=Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))-(k>1?12:16)*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}}
   if(c.mode!=='draw'){
    // climbing: body moves, all four limbs (pen hand too) step between holds
    const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,bd*Math.min(1,dt*(moving?2.2:3.5)),130*S*dt);
