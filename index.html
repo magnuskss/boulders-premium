@@ -587,8 +587,8 @@ function drawer(cv){
   const p0=path[0];c={s:0,fin:0,mode:'draw',px:p0.x,py:p0.y,bx:p0.x-10*S,by:p0.y+22*S,l:[0,1,2,3].map(()=>({h:-1,x:p0.x,y:p0.y+20*S,fx:0,fy:0,t:1}))};
   [0,2,3].forEach(k=>grab(k,true))}
  const OFF=[[-14,-20],[12,-22],[-10,24],[10,24]];
- function grab(k,now){const l=c.l[k],ix=c.bx+OFF[k][0]*S,iy=c.by+OFF[k][1]*S;let bi=-1,bd=1e9;
-  holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
+ function grab(k,now){const l=c.l[k],ix=c.bx+OFF[k][0]*S*(c.dir||1),iy=c.by+OFF[k][1]*S;let bi=-1,bd=1e9;
+  const ay=c.by+(k>1?9:-9)*S,lim=(k>1?24:28)*S;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-ix,h.y-iy)+(Math.hypot(h.x-c.bx,h.y-ay)>lim?1e4:0);if(q<bd){bd=q;bi=i}});
   if(bi<0)return;l.fx=l.x;l.fy=l.y;l.h=bi;if(now){l.x=holds[bi].x;l.y=holds[bi].y;l.t=1}else l.t=0}
  const at=s=>{let lo=0,hi=path.length-1;while(lo<hi){const m=lo+hi>>1;path[m].s<s?lo=m+1:hi=m}return lo};
  init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
@@ -600,24 +600,33 @@ function drawer(cv){
   const ARM=42*S,sh0={x:c.bx,y:c.by-9*S},reach=P=>Math.hypot(P.x-sh0.x,P.y-sh0.y)<ARM&&P.y<sh0.y+10*S,L1=c.l[1];
   let T=pos(c.s);const moving=c.l.some(l=>l.t<1&&holds[l.h]);
   if(c.s>=len){if(!c.fin)c.fin=t+3800;else if(t>c.fin){c.s=0;c.fin=0;T=pos(0);c.mode='climb'}}
+  // where his body wants to be: hanging below the pen, on the side he's facing away from
+  const dir=c.dir||1,gx=T.x-10*S*dir,gy=T.y+22*S,gd=Math.hypot(gx-c.bx,gy-c.by);
+  // same physics as the hero climber: limbs take turns, each reaching for a free hold that gains ground toward the goal
+  const stepTo=ks=>{if(moving||t<(c.wait||0)||gd<6*S)return;const ux=(gx-c.bx)/gd,uy=(gy-c.by)/gd,adv=Math.min(gd,30*S),Bx=c.bx+ux*adv,By=c.by+uy*adv,REACH=58*S;c.n=c.n||0;
+   for(let j=0;j<ks.length;j++){const k=ks[(c.n+j)%ks.length],l=c.l[k],ix=Bx+OFF[k][0]*S*dir,iy=By+OFF[k][1]*S,cur=Math.hypot(l.x-ix,l.y-iy);let bi=-1,bd=1e9;
+    holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH)return;const q=Math.hypot(h.x-ix,h.y-iy);if(q>cur-5*S)return;if(q<bd){bd=q;bi=i}});
+    if(bi>=0){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%ks.length;c.wait=t+30;c.stk=0;return}}
+   c.wait=t+90;c.stk=(c.stk||0)+1};
   if(c.mode==='draw'){
+   const sx=c.bx,sy=c.by-9*S,far=Math.hypot(c.px-sx,c.py-sy)>46*S&&(c.stk||0)<5;
    if(Math.hypot(c.px-T.x,c.py-T.y)<1.5*S){if(c.s<len){const k=at(c.s+.01);
-     if(path[k].up&&path[k].s>c.s){c.s=path[k].s;T=pos(c.s);c.mode='climb'}
-     else{const ns=Math.min(len,c.s+230*S*dt*(path[at(c.s)].v||1)),N=pos(ns);c.s=ns;T=N;c.px=N.x;c.py=N.y}}}
+     if(path[k].up&&path[k].s>c.s){c.s=path[k].s;T=pos(c.s);c.mode='climb';c.stk=0}
+     else if(!far){const ns=Math.min(len,c.s+190*S*dt*(path[at(c.s)].v||1)),N=pos(ns);c.s=ns;T=N;c.px=N.x;c.py=N.y}}}
    else{const dx=T.x-c.px,dy=T.y-c.py,d=Math.hypot(dx,dy),m=Math.max(Math.min(d,40*S*dt),d*Math.min(1,dt*7));c.px+=dx/d*m;c.py+=dy/d*m}
    L1.x=c.px;L1.y=c.py;
-   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy);if(bd>.1){const bm=Math.min(bd,bd*Math.min(1,dt*3));c.bx+=bdx/bd*bm;c.by+=bdy/bd*bm}
-   if(!moving){let w=-1,wd=0;for(const k of [2,3,0]){const l=c.l[k],e=Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))-(k>1?12:16)*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}}
-  if(c.mode!=='draw'){
-   // climbing: body moves, all four limbs (pen hand too) step between holds
-   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,bd*Math.min(1,dt*(moving?2.2:3.5)),130*S*dt);
-   if(bd>.1){c.bx+=bdx/bd*bm;c.by+=bdy/bd*bm}
-   if(L1.h<0&&!moving){L1.h=-2;grab(1)}
-   if(!moving){let w=-1,wd=0;for(const k of [2,3,0,1]){const l=c.l[k],e=Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))-(k>1?10:14)*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}
-   if(bd<3*S&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1;c.px=L1.x;c.py=L1.y}
-   else{c.px=L1.x;c.py=L1.y}}
+   if(c.lpx!=null){const vx=(c.px-c.lpx)/Math.max(dt,.001);c.vx=(c.vx||0)*.92+vx*.08;if(c.vx<-30*S)c.dir=-1;else if(c.vx>30*S)c.dir=1}c.lpx=c.px;
+   if(gd>9*S)stepTo([2,0,3])}
+  else{
+   if(Math.abs(gx-c.bx)>12*S)c.dir=gx<c.bx?-1:1;
+   if(L1.h<0&&!moving){L1.fx=L1.x;L1.fy=L1.y;let bi=-1,bd=1e9;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-L1.x,h.y-L1.y);if(q<bd){bd=q;bi=i}});L1.h=bi;L1.t=0}
+   stepTo([1,2,0,3]);
+   if((gd<9*S||(c.stk||0)>5)&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1}
+   c.px=L1.x;c.py=L1.y}
   const pi=at(c.s),P1=path[pi],pen={x:c.px,y:c.py},drawing=c.mode==='draw'&&Math.hypot(c.px-T.x,c.py-T.y)<1.5*S;
-  c.l.forEach((l,k)=>{if(k===1&&c.mode==='draw')return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.32);const e=.5-.5*Math.cos(Math.PI*l.t);l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*9*S}else{l.x=h.x;l.y=h.y}});
+  c.l.forEach((l,k)=>{if(k===1&&c.mode==='draw')return;const h=holds[l.h];if(!h)return;if(l.t<1){l.t=Math.min(1,l.t+dt/.22);const e=l.t<.5?2*l.t*l.t:1-(-2*l.t+2)**2/2;l.x=l.fx+(h.x-l.fx)*e;l.y=l.fy+(h.y-l.fy)*e-Math.sin(l.t*Math.PI)*8*S}else{l.x=h.x;l.y=h.y}});
+  // body hangs between its four contact points, slightly low (like the hero climber)
+  {const cx=c.l.reduce((a,l)=>a+l.x,0)/4,cy=c.l.reduce((a,l)=>a+l.y,0)/4+3*S,f=1-Math.pow(.88,dt*60);c.bx+=(cx-c.bx)*f;c.by+=(cy-c.by)*f}
   x.clearRect(0,0,W,H);
   holds.forEach((h,i)=>{x.fillStyle=c.l.some(l=>l.h===i)?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
   // the drawn line, trailing behind the pen
@@ -631,7 +640,7 @@ function drawer(cv){
   // climber
   x.fillStyle='#fff';const sh={x:c.bx,y:c.by-9*S+hop},hip={x:c.bx,y:c.by+9*S+hop};dots(sh.x,sh.y,hip.x,hip.y,9);
   for(let a=0;a<14;a++){const q=a/14*6.283;x.fillRect(sh.x+Math.cos(q)*5*S-.9,sh.y-9*S+Math.sin(q)*5*S-.9,1.8,1.8)}
-  limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-1);limb(sh.x,sh.y,pen.x,pen.y,1);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,1);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-1);
+  const fd=c.dir||1;limb(sh.x,sh.y,c.l[0].x,c.l[0].y,-fd,28*S);limb(sh.x,sh.y,pen.x,pen.y,fd);limb(hip.x,hip.y,c.l[2].x,c.l[2].y,fd,24*S);limb(hip.x,hip.y,c.l[3].x,c.l[3].y,-fd,24*S);
   // the pen: a short stick in his hand with a bright tip on the line
   const ang=Math.atan2(pen.y-sh.y,pen.x-sh.x);x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=1.4*S;x.beginPath();x.moveTo(pen.x-Math.cos(ang-.5)*10*S,pen.y-Math.sin(ang-.5)*10*S);x.lineTo(pen.x,pen.y);x.stroke();
   x.fillStyle='#fff';x.shadowColor='#fff';x.shadowBlur=12;x.beginPath();x.arc(pen.x,pen.y,1.8*S,0,6.283);x.fill();x.shadowBlur=0}
