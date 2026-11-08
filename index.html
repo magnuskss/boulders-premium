@@ -479,14 +479,19 @@ function climb(cv,opt={}){
    let fs=200;ox.font=`900 ${fs}px Inter,Arial Black,system-ui,sans-serif`;fs=fs*tw/ox.measureText('BOULDERS').width*.98;ox.font=`900 ${fs}px Inter,Arial Black,system-ui,sans-serif`;
    ox.textBaseline='middle';ox.fillStyle='#fff';ox.fillText('BOULDERS',(tw-ox.measureText('BOULDERS').width)/2,o.height/2);
    const im=ox.getImageData(0,0,o.width,o.height).data,stp=W<700?3:4,X0=(W-tw)/2,Y0=H*(W<700?.8:.78)-o.height/2;
-   for(let yy=0;yy<o.height;yy+=stp)for(let xx=0;xx<o.width;xx+=stp)if(im[(yy*o.width+xx)*4+3]>140)pts.push({x:X0+xx,y:Y0+yy,lit:0});
-   pts.sort((a,b)=>a.x-b.x);
+   // outline pixels of the letters, chained into a pen path (nearest neighbour; long jumps lift the pen)
+   const A=(xx,yy)=>xx>=0&&yy>=0&&xx<o.width&&yy<o.height&&im[(yy*o.width+xx)*4+3]>140,E=[];
+   for(let yy=0;yy<o.height;yy+=stp)for(let xx=0;xx<o.width;xx+=stp)if(A(xx,yy)&&(!A(xx-stp,yy)||!A(xx+stp,yy)||!A(xx,yy-stp)||!A(xx,yy+stp)))E.push({x:X0+xx,y:Y0+yy});
+   E.sort((p,q)=>p.x-q.x);const used=new Uint8Array(E.length);let cur=0;
+   for(let n=0;n<E.length;n++){used[cur]=1;const e=E[cur];let bi=-1,bd=1e9;
+    for(let i=0;i<E.length;i++){if(used[i])continue;const dx=E[i].x-e.x;if(dx>bd)break;const q=Math.hypot(dx,E[i].y-e.y)+(E[i].x<e.x-stp*2?(e.x-E[i].x)*.5:0);if(q<bd){bd=q;bi=i}}
+    pts.push({x:e.x,y:e.y,j:pts.length&&Math.hypot(e.x-pts[pts.length-1].x,e.y-pts[pts.length-1].y)>stp*2.5});if(bi<0)break;cur=bi}
    pts.forEach(p=>{if(holds.every(h=>Math.hypot(h.x-p.x,h.y-p.y)>16*S)){const h={x:p.x,y:p.y,r:2.6*S,d:[]};for(let i=0;i<7;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*h.r;h.d.push([Math.cos(a)*q,Math.sin(a)*q])}holds.push(h)}})}
   const gap=(opt.big?44:17)*S;let tries=0;while(holds.length<(opt.logo?holds.length+1:0)+(opt.big?(W<700?90:200):(W<700?520:1000))&&!opt.logo&&tries++<6000){const h={x:20+rnd()*(W-40),y:70+rnd()*(H-110),r:(3+rnd()*4)*S*(opt.big?1.9:1),d:[]};
    if(holds.every(o=>Math.hypot(o.x-h.x,o.y-h.y)>gap)){const n=Math.round(h.r*2.4);for(let i=0;i<n;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*h.r;h.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(h)}}
   const taken=[],near=(px,py)=>holds.reduce((b,h,i)=>taken.includes(i)?b:taken.includes(b)||Math.hypot(h.x-px,h.y-py)<Math.hypot(holds[b].x-px,holds[b].y-py)?i:b,0);
   const bx=opt.logo?(pts[0]?pts[0].x:W*.1):W*.18,by=opt.logo?(pts[0]?pts[0].y:H*.8):H*.78,o=[[-14,-26],[14,-26],[-12,26],[12,26]];
-  c={pts,st:0,bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
+  c={pts,p:0,st:0,bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
  init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
  const FINE=matchMedia('(hover:hover) and (pointer:fine)').matches;let party=[];
  addEventListener('pointermove',e=>{if(!FINE||opt.rnd)return;const r=cv.getBoundingClientRect();if(e.clientY<r.bottom){mx=e.clientX-r.left;my=e.clientY-r.top}},{passive:true});
@@ -494,7 +499,7 @@ function climb(cv,opt={}){
  const REACH=()=>(opt.big?90:66)*S, OFF=[[-14,-24],[14,-24],[-11,24],[11,24]];
  function step(t){
   // pc: follow the cursor. phone: wander to random holds
-  if(opt.logo){const n=c.pts.find(p=>!p.lit);if(n)c.g={x:n.x,y:n.y},c.gt=t+1e9;else if(!c.fin)c.fin=t+3500;else if(t>c.fin){c.pts.forEach(p=>p.lit=0);c.fin=0}}
+  if(opt.logo){const n=c.pts[Math.min(c.pts.length-1,c.p+6)];if(c.p<c.pts.length)c.g={x:n.x,y:n.y};else if(!c.fin)c.fin=t+3500;else if(t>c.fin){c.p=0;c.fin=0}}
   else if(mx==null&&(!c.g||Math.hypot(c.g.x-c.bx,c.g.y-c.by)<30*S||t>c.gt)){const h=holds[Math.random()*holds.length|0];c.g={x:h.x,y:h.y};c.gt=t+9000}
   // watchdog: if the body hasn't really moved in 1.2s, choose a fresh nearby goal
   if(mx==null&&!opt.logo){if(!c.wd||t>c.wd.t+1200){if(c.wd&&Math.hypot(c.bx-c.wd.x,c.by-c.wd.y)<10*S){const nb=holds.filter(h=>{const q=Math.hypot(h.x-c.bx,h.y-c.by);return q>50*S&&q<160*S});const h=nb[Math.random()*nb.length|0]||holds[0];c.g={x:h.x,y:h.y};c.gt=t+6000}c.wd={t,x:c.bx,y:c.by}}}
@@ -525,8 +530,11 @@ function climb(cv,opt={}){
   const cx=c.l.reduce((s,l)=>s+l.x,0)/4,cy=c.l.reduce((s,l)=>s+l.y,0)/4+3*S;c.bx+=(cx-c.bx)*.12;c.by+=(cy-c.by)*.12;
   x.clearRect(0,0,W,H);
   // logo: dots light up wherever his hands, feet and body pass, painting the word
-  if(opt.logo){const R2=(15*S)**2,P=[...c.l,{x:c.bx,y:c.by}];c.pts.forEach(p=>{if(!p.lit&&P.some(q=>(q.x-p.x)**2+(q.y-p.y)**2<R2))p.lit=t;
-    const a=p.lit?Math.min(1,(t-p.lit)/500):0,fo=c.fin?Math.max(0,Math.min(1,(c.fin-t)/800)):1;x.fillStyle=`rgba(255,255,255,${.06+a*.8*fo})`;x.fillRect(p.x-.9,p.y-.9,1.8,1.8)})}
+  if(opt.logo){ // pen: the line follows his right hand along the letter outlines
+   const P=c.pts,hd=c.l[1];let k=0;while(c.p<P.length&&k++<4&&Math.hypot(P[c.p].x-c.bx,P[c.p].y-c.by)<34*S)c.p++;
+   const fo=c.fin?Math.max(0,Math.min(1,(c.fin-t)/800)):1;x.save();x.strokeStyle=`rgba(255,255,255,${.9*fo})`;x.lineWidth=1.6*S;x.lineJoin=x.lineCap='round';x.shadowColor='rgba(255,255,255,.7)';x.shadowBlur=8;
+   x.beginPath();for(let i=0;i<c.p&&i<P.length;i++){P[i].j||!i?x.moveTo(P[i].x,P[i].y):x.lineTo(P[i].x,P[i].y)}
+   if(c.p&&c.p<P.length){x.lineTo(hd.x,hd.y)}x.stroke();x.restore()}
   // holds as dot clusters, brighter when the cursor is near
   holds.forEach((h,i)=>{const used=c.l.some(l=>l.h===i),pn=mx==null?0:Math.max(0,1-Math.hypot(h.x-mx,h.y-my)/160);x.fillStyle=used?'rgba(255,255,255,.95)':`rgba(255,255,255,${.22+pn*.5})`;
    h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
