@@ -473,11 +473,20 @@ function climb(cv,opt={}){
  const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W,H,S,holds=[],mx=null,my=null,vis=true,c;
  const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(7);
  function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);S=W<700?.75:1;
-  holds=[];const gap=(opt.big?44:17)*S;let tries=0;while(holds.length<(opt.big?(W<700?90:200):(W<700?520:1000))&&tries++<6000){const h={x:20+rnd()*(W-40),y:70+rnd()*(H-110),r:(3+rnd()*4)*S*(opt.big?1.9:1),d:[]};
+  holds=[];c=c||{};const pts=[];
+  if(opt.logo){ // sample the word BOULDERS into dots; holds sit along the letters so the climber can trace them
+   const o=document.createElement('canvas'),ox=o.getContext('2d'),tw=Math.min(W*.9,1100);o.width=tw|0;o.height=tw*.26|0;
+   let fs=200;ox.font=`900 ${fs}px Inter,Arial Black,system-ui,sans-serif`;fs=fs*tw/ox.measureText('BOULDERS').width*.98;ox.font=`900 ${fs}px Inter,Arial Black,system-ui,sans-serif`;
+   ox.textBaseline='middle';ox.fillStyle='#fff';ox.fillText('BOULDERS',(tw-ox.measureText('BOULDERS').width)/2,o.height/2);
+   const im=ox.getImageData(0,0,o.width,o.height).data,stp=W<700?3:4,X0=(W-tw)/2,Y0=H*(W<700?.8:.78)-o.height/2;
+   for(let yy=0;yy<o.height;yy+=stp)for(let xx=0;xx<o.width;xx+=stp)if(im[(yy*o.width+xx)*4+3]>140)pts.push({x:X0+xx,y:Y0+yy,lit:0});
+   pts.sort((a,b)=>a.x-b.x);
+   pts.forEach(p=>{if(holds.every(h=>Math.hypot(h.x-p.x,h.y-p.y)>16*S)){const h={x:p.x,y:p.y,r:2.6*S,d:[]};for(let i=0;i<7;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*h.r;h.d.push([Math.cos(a)*q,Math.sin(a)*q])}holds.push(h)}})}
+  const gap=(opt.big?44:17)*S;let tries=0;while(holds.length<(opt.logo?holds.length+1:0)+(opt.big?(W<700?90:200):(W<700?520:1000))&&!opt.logo&&tries++<6000){const h={x:20+rnd()*(W-40),y:70+rnd()*(H-110),r:(3+rnd()*4)*S*(opt.big?1.9:1),d:[]};
    if(holds.every(o=>Math.hypot(o.x-h.x,o.y-h.y)>gap)){const n=Math.round(h.r*2.4);for(let i=0;i<n;i++){const a=rnd()*6.283,q=Math.sqrt(rnd())*h.r;h.d.push([Math.cos(a)*q,Math.sin(a)*q*.7])}holds.push(h)}}
   const taken=[],near=(px,py)=>holds.reduce((b,h,i)=>taken.includes(i)?b:taken.includes(b)||Math.hypot(h.x-px,h.y-py)<Math.hypot(holds[b].x-px,holds[b].y-py)?i:b,0);
-  const bx=W*.18,by=H*.78,o=[[-14,-26],[14,-26],[-12,26],[12,26]];
-  c={bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
+  const bx=opt.logo?(pts[0]?pts[0].x:W*.1):W*.18,by=opt.logo?(pts[0]?pts[0].y:H*.8):H*.78,o=[[-14,-26],[14,-26],[-12,26],[12,26]];
+  c={pts,st:0,bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
  init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
  const FINE=matchMedia('(hover:hover) and (pointer:fine)').matches;let party=[];
  addEventListener('pointermove',e=>{if(!FINE||opt.rnd)return;const r=cv.getBoundingClientRect();if(e.clientY<r.bottom){mx=e.clientX-r.left;my=e.clientY-r.top}},{passive:true});
@@ -485,7 +494,10 @@ function climb(cv,opt={}){
  const REACH=()=>(opt.big?90:66)*S, OFF=[[-14,-24],[14,-24],[-11,24],[11,24]];
  function step(t){
   // pc: follow the cursor. phone: wander to random holds
-  if(mx==null&&(!c.g||Math.hypot(c.g.x-c.bx,c.g.y-c.by)<30*S||t>c.gt)){const h=holds[Math.random()*holds.length|0];c.g={x:h.x,y:h.y};c.gt=t+9000}
+  if(opt.logo){const n=c.pts.find(p=>!p.lit);if(n)c.g={x:n.x,y:n.y},c.gt=t+1e9;else if(!c.fin)c.fin=t+3500;else if(t>c.fin){c.pts.forEach(p=>p.lit=0);c.fin=0}}
+  else if(mx==null&&(!c.g||Math.hypot(c.g.x-c.bx,c.g.y-c.by)<30*S||t>c.gt)){const h=holds[Math.random()*holds.length|0];c.g={x:h.x,y:h.y};c.gt=t+9000}
+  // watchdog: if the body hasn't really moved in 1.2s, choose a fresh nearby goal
+  if(mx==null&&!opt.logo){if(!c.wd||t>c.wd.t+1200){if(c.wd&&Math.hypot(c.bx-c.wd.x,c.by-c.wd.y)<10*S){const nb=holds.filter(h=>{const q=Math.hypot(h.x-c.bx,h.y-c.by);return q>50*S&&q<160*S});const h=nb[Math.random()*nb.length|0]||holds[0];c.g={x:h.x,y:h.y};c.gt=t+6000}c.wd={t,x:c.bx,y:c.by}}}
   const gx=mx??c.g.x,gy=my??c.g.y;
   if(c.l.some(l=>l.t<1))return;if(t<c.wait)return;
   const dx=gx-c.bx,dy=gy-c.by,d=Math.hypot(dx,dy);
@@ -494,11 +506,15 @@ function climb(cv,opt={}){
   // climb like a person: limbs take turns (right hand, left foot, left hand, right foot); each one reaches for the free
   // hold nearest its ideal spot ahead of the body, and must actually gain ground toward the goal
   const ux=dx/d,uy=dy/d,adv=Math.min(d,34*S),Bx=c.bx+ux*adv,By=c.by+uy*adv,SEQ=[1,2,0,3];c.n=c.n||0;
-  for(let j=0;j<4;j++){const k=SEQ[(c.n+j)%4],l=c.l[k],ix=Bx+OFF[k][0]*S,iy=By+OFF[k][1]*S;let bi=-1,bd=1e9;
-   holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH())return;if((h.x-l.x)*ux+(h.y-l.y)*uy<8*S)return;
-    const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
-   if(bi>=0){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%4;c.wait=t+40;return}}
-  c.wait=t+200}
+  for(let j=0;j<4;j++){const k=SEQ[(c.n+j)%4],l=c.l[k],ix=Bx+OFF[k][0]*S,iy=By+OFF[k][1]*S;let bi=-1,bd=1e9;const cur=Math.hypot(l.x-ix,l.y-iy);
+   holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;if(Math.hypot(h.x-Bx,h.y-By)>REACH())return;const q=Math.hypot(h.x-ix,h.y-iy);if(q>cur-6*S)return;if(q<bd){bd=q;bi=i}});
+   if(bi>=0){l.fx=l.x;l.fy=l.y;l.h=bi;l.t=0;c.n=(c.n+j+1)%4;c.wait=t+40;c.st=0;return}}
+  // no hold gains ground toward this goal: when wandering, pick a new goal nearby so he never freezes
+  // still nothing: shuffle a random limb to any free hold in reach, so he keeps moving
+  if(mx==null&&c.st>=1){const k=Math.random()*4|0,l=c.l[k],fr=holds.map((h,i)=>i).filter(i=>!c.l.some(m=>m.h===i)&&Math.hypot(holds[i].x-c.bx,holds[i].y-c.by)<REACH()*.9);
+   if(fr.length){const i=fr[Math.random()*fr.length|0];l.fx=l.x;l.fy=l.y;l.h=i;l.t=0;c.wait=t+120}}
+  if(mx==null&&++c.st>2){c.st=0;const near=holds.filter(h=>{const q=Math.hypot(h.x-c.bx,h.y-c.by);return q>60*S&&q<220*S});const h=near.length?near[Math.random()*near.length|0]:holds[Math.random()*holds.length|0];c.g={x:h.x,y:h.y};c.gt=t+9000}
+  c.wait=t+120}
  const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
  const limb=(sx,sy,ex,ey,bend)=>{const mxp=(sx+ex)/2,myp=(sy+ey)/2,L=Math.hypot(ex-sx,ey-sy),k=Math.max(0,(40*S-L))*.45*bend,nx=-(ey-sy)/(L||1),ny=(ex-sx)/(L||1);
   const jx=mxp+nx*k,jy=myp+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
@@ -508,6 +524,9 @@ function climb(cv,opt={}){
   // body hangs between the four contact points, slightly low
   const cx=c.l.reduce((s,l)=>s+l.x,0)/4,cy=c.l.reduce((s,l)=>s+l.y,0)/4+3*S;c.bx+=(cx-c.bx)*.12;c.by+=(cy-c.by)*.12;
   x.clearRect(0,0,W,H);
+  // logo: dots light up wherever his hands, feet and body pass, painting the word
+  if(opt.logo){const R2=(15*S)**2,P=[...c.l,{x:c.bx,y:c.by}];c.pts.forEach(p=>{if(!p.lit&&P.some(q=>(q.x-p.x)**2+(q.y-p.y)**2<R2))p.lit=t;
+    const a=p.lit?Math.min(1,(t-p.lit)/500):0,fo=c.fin?Math.max(0,Math.min(1,(c.fin-t)/800)):1;x.fillStyle=`rgba(255,255,255,${.06+a*.8*fo})`;x.fillRect(p.x-.9,p.y-.9,1.8,1.8)})}
   // holds as dot clusters, brighter when the cursor is near
   holds.forEach((h,i)=>{const used=c.l.some(l=>l.h===i),pn=mx==null?0:Math.max(0,1-Math.hypot(h.x-mx,h.y-my)/160);x.fillStyle=used?'rgba(255,255,255,.95)':`rgba(255,255,255,${.22+pn*.5})`;
    h.d.forEach(([a,b])=>x.fillRect(h.x+a-.8,h.y+b-.8,1.6,1.6))});
@@ -524,7 +543,7 @@ function climb(cv,opt={}){
  requestAnimationFrame(frame)}
 climb(document.getElementById('wave'));
 
-climb(document.getElementById('wave2'),{rnd:1,big:1});
+climb(document.getElementById('wave2'),{rnd:1,logo:1});
 
 
 // card dot-glow follows cursor
