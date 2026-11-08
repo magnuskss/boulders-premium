@@ -562,11 +562,11 @@ function drawer(cv){
   R:[[[0,1],[0,0],[.52,0],[.72,.11],[.72,.37],[.52,.48],[0,.48]],[[.38,.48],[.78,1]]],
   S:[[[.74,.12],[.55,0],[.2,0],[.03,.12],[.04,.33],[.3,.47],[.6,.55],[.79,.69],[.78,.9],[.55,1],[.2,1],[0,.88]]]};
  const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(11);
- function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+ function init(re){if(!re)cv.parentElement.style.paddingBottom='';W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);
   // fit the word into the free space under the buttons, at any screen size
   const cr=cv.getBoundingClientRect(),ac=cv.parentElement.querySelector('.acts'),top=ac?ac.getBoundingClientRect().bottom-cr.top+30:H*.6;
-  const word='BOULDERS',adv=1.18,k8=word.length*adv-.38;let h=Math.min(W*.88,1000)/k8;
-  S=Math.max(.6,Math.min(1.15,.5+h/200));let room=H-top-14;h=Math.min(h,(room-62*S)/1.35);h=Math.max(h,18);S=Math.max(.6,Math.min(1.15,.5+h/200));
+  const word='BOULDERS',adv=1.18,k8=word.length*adv-.38;let h=W*.96/k8;
+  S=Math.max(.6,Math.min(1.15,.5+h/200));let room=H-top-14;const need=h*1.35+62*S-room;if(need>1){const f=cv.parentElement;f.style.paddingBottom=(parseFloat(getComputedStyle(f).paddingBottom)+need+10)+'px';return requestAnimationFrame(()=>init(1))}S=Math.max(.6,Math.min(1.15,.5+h/200));
   const tw=h*k8,X0=(W-tw)/2,Y0=Math.max(top+h*.3,top+(room-h-62*S)/2+h*.3);
   // resample every stroke to ~2px steps; pen-up moves are flagged so no line is drawn there
   path=[];[...word].forEach((ch,li)=>L[ch].forEach(st=>{for(let i=0;i<st.length;i++){const p=[X0+(li*adv+st[i][0])*h,Y0+st[i][1]*h];
@@ -588,7 +588,7 @@ function drawer(cv){
  new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
  const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
  const limb=(sx,sy,ex,ey,bend,mx=1e9)=>{let L2=Math.hypot(ex-sx,ey-sy);if(L2>mx){ex=sx+(ex-sx)*mx/L2;ey=sy+(ey-sy)*mx/L2;L2=mx}const k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
- let last=0;function frame(t){requestAnimationFrame(frame);if(!vis){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
+ let last=0;function frame(t){requestAnimationFrame(frame);if(!vis||!c){last=t;return}const dt=Math.min(50,t-last)/1000;last=t;
   const pos=q=>{const k=at(q),B=path[k],A=path[Math.max(0,k-1)],f=B.s>A.s?(q-A.s)/(B.s-A.s):1;return{x:A.x+(B.x-A.x)*f,y:A.y+(B.y-A.y)*f}};
   const ARM=32*S,sh0={x:c.bx,y:c.by-9*S},reach=P=>Math.hypot(P.x-sh0.x,P.y-sh0.y)<ARM&&P.y<sh0.y+3*S,L1=c.l[1];
   let T=pos(c.s);const moving=c.l.some(l=>l.t<1&&holds[l.h]);
