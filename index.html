@@ -576,7 +576,7 @@ function drawer(cv){
   const p0=path[0];c={s:0,fin:0,mode:'draw',px:p0.x,py:p0.y,bx:p0.x-10*S,by:p0.y+22*S,l:[0,1,2,3].map(()=>({h:-1,x:p0.x,y:p0.y+20*S,fx:0,fy:0,t:1}))};
   [0,2,3].forEach(k=>grab(k,true))}
  const OFF=[[-14,-20],[12,-22],[-10,24],[10,24]];
- function grab(k,now){const l=c.l[k],lx=c.tx==null?c.bx:c.bx+(c.tx-c.bx)*(k<2?.9:.5),ly=c.ty==null?c.by:c.by+(c.ty-c.by)*(k<2?.9:.5),ix=lx+OFF[k][0]*S,iy=ly+OFF[k][1]*S;let bi=-1,bd=1e9;
+ function grab(k,now){const l=c.l[k],ix=c.bx+OFF[k][0]*S,iy=c.by+OFF[k][1]*S;let bi=-1,bd=1e9;
   holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-ix,h.y-iy);if(q<bd){bd=q;bi=i}});
   if(bi<0)return;l.fx=l.x;l.fy=l.y;l.h=bi;if(now){l.x=holds[bi].x;l.y=holds[bi].y;l.t=1}else l.t=0}
  const at=s=>{let lo=0,hi=path.length-1;while(lo<hi){const m=lo+hi>>1;path[m].s<s?lo=m+1:hi=m}return lo};
@@ -597,14 +597,10 @@ function drawer(cv){
    L1.x=c.px;L1.y=c.py}
   if(c.mode!=='draw'){
    // climbing: body moves, all four limbs (pen hand too) step between holds
-   const tx=T.x-10*S,ty=T.y+22*S;c.tx=tx;c.ty=ty;const bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,(moving?60:150)*S*dt);
+   const tx=T.x-10*S,ty=T.y+22*S,bdx=tx-c.bx,bdy=ty-c.by,bd=Math.hypot(bdx,bdy),bm=Math.min(bd,(moving?80:150)*S*dt);
    if(bd>.1){c.bx+=bdx/bd*bm;c.by+=bdy/bd*bm}
    if(L1.h<0&&!moving){L1.h=-2;grab(1)}
-   if(!moving){const st=k=>Math.hypot(c.l[k].x-(c.bx+(tx-c.bx)*(k<2?.9:.5)+OFF[k][0]*S),c.l[k].y-(c.by+(ty-c.by)*(k<2?.9:.5)+OFF[k][1]*S));
-    // hands lead toward the climbing direction; feet only follow when really stretched
-    let w=-1,wd=0;for(const k of [2,3])if(Math.hypot(c.l[k].x-c.bx,c.l[k].y-c.by-9*S)>26*S&&st(k)>wd){wd=st(k);w=k}
-    if(w<0)for(const k of [0,1]){const e=st(k)-12*S;if(e>wd){wd=e;w=k}}
-    if(w<0)for(const k of [2,3]){const e=st(k)-20*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}
+   if(!moving){let w=-1,wd=0;for(const k of [2,3,0,1]){const l=c.l[k],e=Math.hypot(l.x-(c.bx+OFF[k][0]*S),l.y-(c.by+OFF[k][1]*S))-(k>1?10:14)*S;if(e>wd){wd=e;w=k}}if(w>=0)grab(w)}
    if(bd<2*S&&!moving&&c.s<len){c.mode='draw';L1.h=-1;L1.t=1;c.px=L1.x;c.py=L1.y}
    else{c.px=L1.x;c.py=L1.y}}
   const pi=at(c.s),P1=path[pi],pen={x:c.px,y:c.py},drawing=c.mode==='draw'&&Math.hypot(c.px-T.x,c.py-T.y)<1.5*S;
