@@ -233,7 +233,10 @@ section,footer{z-index:1}
 @keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
 /* touch: colour + play when in view, header backdrop */
 @media (hover:none),(max-width:980px){
-  header.top::before{content:"";position:fixed;left:0;right:0;top:0;height:96px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(5,5,5,.92),rgba(5,5,5,.6) 60%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  .hold{filter:drop-shadow(0 0 10px var(--c))!important;transition:scale .25s}
+  #holds{contain:strict}
+  *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  header.top::before{content:"";position:fixed;left:0;right:0;top:0;height:96px;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(5,5,5,.92),rgba(5,5,5,.6) 60%,transparent);
     -webkit-mask:linear-gradient(180deg,#000 60%,transparent);mask:linear-gradient(180deg,#000 60%,transparent)}
   .live img,.live video{filter:grayscale(0) brightness(.92)!important}
   .live>.halftone{opacity:0}
@@ -441,8 +444,8 @@ rail.addEventListener('scroll',()=>{const p=rail.scrollLeft/(rail.scrollWidth-ra
 function wave(cv,o){
   const ctx=cv.getContext('2d'),host=cv.parentElement;let W,H,P=[],dust=[],vis=true,mx=-1e4,my=-1e4,sm=0;
   const rnd=()=>{let s=0;for(let i=0;i<3;i++)s+=Math.random();return s/1.5-1}; // ~gaussian in [-1,1]
-  function size(){const d=Math.min(devicePixelRatio||1,1.5);W=host.clientWidth;H=host.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
-    const n=Math.min(42000,Math.round(W*H/(innerWidth<700?40:30)));P=new Float32Array(n*4);
+  function size(){const d=Math.min(devicePixelRatio||1,innerWidth<700?1:1.5);W=host.clientWidth;H=host.clientHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
+    const n=Math.min(42000,Math.round(W*H/(innerWidth<700?90:30)));P=new Float32Array(n*4);
     for(let i=0;i<n;i++){P[i*4]=Math.random();P[i*4+1]=rnd();P[i*4+2]=Math.random();P[i*4+3]=Math.random()}
     dust=Array.from({length:Math.round(W*H/2600)},()=>[Math.random()*W,Math.random()*H,Math.random()])}
   size();onW(size);
@@ -468,7 +471,7 @@ function wave(cv,o){
       const q=Math.max(0,Math.min(4,Math.floor(l*5)));B[q].push(x,y)}
     for(let q=0;q<5;q++){ctx.fillStyle=`rgba(255,255,255,${AL[q]})`;const b=B[q],s=q>3?1.6:1.15;for(let i=0;i<b.length;i+=2)ctx.fillRect(b[i],b[i+1],s,s)}
     // cheap bloom: downsample + upscale back on top
-    G.width=W/6|0;G.height=H/6|0;g.drawImage(cv,0,0,G.width,G.height);ctx.globalAlpha=.55;ctx.imageSmoothingQuality='high';ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(G,0,0,cv.width,cv.height);ctx.restore();ctx.globalAlpha=1}
+    if(G.width!==(W/6|0)||G.height!==(H/6|0)){G.width=W/6|0;G.height=H/6|0}else g.clearRect(0,0,G.width,G.height);g.drawImage(cv,0,0,G.width,G.height);ctx.globalAlpha=.55;ctx.imageSmoothingQuality='high';ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(G,0,0,cv.width,cv.height);ctx.restore();ctx.globalAlpha=1}
   requestAnimationFrame(frame)}
 // hero: a tiny climber made of dots that climbs toward the cursor, moving one limb at a time between dotted holds
 function climb(cv,opt={}){
