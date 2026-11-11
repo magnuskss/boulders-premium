@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="da">
 <head>
+<script>window.onW=f=>{let w=innerWidth,t;addEventListener('resize',()=>{if(innerWidth===w)return;w=innerWidth;clearTimeout(t);t=setTimeout(f,200)})}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Boulders — Danmarks bouldering netværk</title>
@@ -211,7 +212,7 @@ h2 em{color:#9c9c9c}
 .rev .who{display:flex;justify-content:space-between;font-size:13px}.rev .who span{color:var(--mute)}
 
 /* cta */
-.final{position:relative;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow:hidden;padding:20vh 4vw}
+.final{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;overflow:hidden;padding:20vh 4vw}
 .final>img{position:absolute;inset:-6% 0;width:100%;height:112%;object-fit:cover;filter:brightness(.45) grayscale(1)}
 .final::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,var(--bg),transparent 25%,transparent 70%,var(--bg))}
 .final>*:not(canvas){position:relative;z-index:2}
@@ -444,7 +445,7 @@ function wave(cv,o){
     const n=Math.min(42000,Math.round(W*H/(innerWidth<700?40:30)));P=new Float32Array(n*4);
     for(let i=0;i<n;i++){P[i*4]=Math.random();P[i*4+1]=rnd();P[i*4+2]=Math.random();P[i*4+3]=Math.random()}
     dust=Array.from({length:Math.round(W*H/2600)},()=>[Math.random()*W,Math.random()*H,Math.random()])}
-  size();addEventListener('resize',size);
+  size();onW(size);
   host.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top});
   host.addEventListener('pointerleave',()=>{mx=my=-1e4});
   new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
@@ -471,7 +472,7 @@ function wave(cv,o){
   requestAnimationFrame(frame)}
 // hero: a tiny climber made of dots that climbs toward the cursor, moving one limb at a time between dotted holds
 function climb(cv,opt={}){
- const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W,H,S,holds=[],mx=null,my=null,vis=true,c;
+ const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,innerWidth<700?1.5:2);let W,H,S,holds=[],mx=null,my=null,vis=true,c;
  const rnd=(a=>()=>(a=(a*16807)%2147483647)/2147483647)(7);
  function init(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);S=W<700?.75:1;
   holds=[];c=c||{};const pts=[];
@@ -493,7 +494,7 @@ function climb(cv,opt={}){
   const taken=[],near=(px,py)=>holds.reduce((b,h,i)=>taken.includes(i)?b:taken.includes(b)||Math.hypot(h.x-px,h.y-py)<Math.hypot(holds[b].x-px,holds[b].y-py)?i:b,0);
   const bx=opt.logo?(pts[0]?pts[0].x:W*.1):W*.18,by=opt.logo?(pts[0]?pts[0].y:H*.8):H*.78,o=[[-14,-26],[14,-26],[-12,26],[12,26]];
   c={pts,p:0,st:0,bx,by,l:o.map(([dx,dy])=>{const i=near(bx+dx*S,by+dy*S);taken.push(i);return{h:i,x:holds[i].x,y:holds[i].y,fx:0,fy:0,t:1}}),wait:0}}
- init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
+ init();onW(()=>init());
  const FINE=matchMedia('(hover:hover) and (pointer:fine)').matches;let party=[];
  addEventListener('pointermove',e=>{if(!FINE||opt.rnd)return;const r=cv.getBoundingClientRect();if(e.clientY<r.bottom){mx=e.clientX-r.left;my=e.clientY-r.top}},{passive:true});
  new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
@@ -554,7 +555,7 @@ climb(document.getElementById('wave'));
 
 // bottom: a tiny dot climber holds a pen and draws BOULDERS; the line trails behind him at a steady pace
 function drawer(cv){
- const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);let W,H,S,holds,path,len,c,vis=true;
+ const x=cv.getContext('2d'),dpr=Math.min(devicePixelRatio||1,innerWidth<700?1.5:2);let W,H,S,holds,path,len,c,vis=true;
  // single-stroke letters in a 1 x 1 box (y down)
  const L={B:[[[0,0],[0,1]],[[0,0],[.55,0],[.72,.1],[.72,.36],[.55,.47],[0,.47]],[[.55,.47],[.78,.58],[.8,.86],[.62,1],[0,1]]],
   O:[Array.from({length:29},(_,i)=>{const a=-Math.PI/2-i/28*Math.PI*2;return[.42+Math.cos(a)*.42,.5+Math.sin(a)*.5]})],
@@ -591,7 +592,7 @@ function drawer(cv){
   const ay=c.by+(k>1?9:-9)*S,lim=(k>1?24:28)*S;holds.forEach((h,i)=>{if(c.l.some(m=>m.h===i))return;const q=Math.hypot(h.x-ix,h.y-iy)+(Math.hypot(h.x-c.bx,h.y-ay)>lim?1e4:0);if(q<bd){bd=q;bi=i}});
   if(bi<0)return;l.fx=l.x;l.fy=l.y;l.h=bi;if(now){l.x=holds[bi].x;l.y=holds[bi].y;l.t=1}else l.t=0}
  const at=s=>{let lo=0,hi=path.length-1;while(lo<hi){const m=lo+hi>>1;path[m].s<s?lo=m+1:hi=m}return lo};
- init();addEventListener('resize',()=>{clearTimeout(cv._r);cv._r=setTimeout(init,200)});
+ init();onW(()=>init());
  new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);
  const dots=(ax,ay,bx,by,n)=>{for(let i=0;i<=n;i++){const f=i/n;x.fillRect(ax+(bx-ax)*f-.9,ay+(by-ay)*f-.9,1.8,1.8)}};
  const limb=(sx,sy,ex,ey,bend,mx=1e9)=>{let L2=Math.hypot(ex-sx,ey-sy);if(L2>mx){ex=sx+(ex-sx)*mx/L2;ey=sy+(ey-sy)*mx/L2;L2=mx}const k=Math.max(0,40*S-L2)*.45*bend,nx=-(ey-sy)/(L2||1),ny=(ex-sx)/(L2||1),jx=(sx+ex)/2+nx*k,jy=(sy+ey)/2+ny*k;dots(sx,sy,jx,jy,7);dots(jx,jy,ex,ey,7)};
@@ -730,7 +731,7 @@ let uid=900;box.addEventListener('click',e=>{const h=e.target.closest('.hold');i
  sv.animate([{transform:'scale(1)'},{transform:'scale(.82)'}],{duration:110,easing:'ease-in',fill:'forwards'}).onfinish=()=>{
   h.innerHTML=g(++uid,T[ti]).replace(/^<svg/,'<svg').replace(NEON[uid%NEON.length][0],NEON[ci][0]).replace(NEON[uid%NEON.length][1],NEON[ci][1]);
   h.firstElementChild.animate([{transform:'scale(.82)'},{transform:'scale(1.1)',offset:.45},{transform:'scale(.97)',offset:.75},{transform:'scale(1)'}],{duration:380,easing:'ease-out'}).onfinish=()=>h.busy=0};});
-place();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(place,200)});addEventListener('load',place);setTimeout(place,1500);
+place();onW(place);addEventListener('load',place);setTimeout(place,1500);
 })();
 </script>
 
